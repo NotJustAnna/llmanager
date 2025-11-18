@@ -4,6 +4,7 @@
     "": {
       "name": "llmanager",
       "dependencies": {
+        "@datazod/zod-sql": "^0.2.9",
         "@hookform/resolvers": "^5.2.2",
         "@notjustanna/log4js": "^1.0.3",
         "@radix-ui/react-dialog": "^1.1.15",
@@ -14,7 +15,6 @@
         "@radix-ui/react-switch": "^1.2.6",
         "@radix-ui/react-tabs": "^1.1.13",
         "@radix-ui/react-tooltip": "^1.2.8",
-        "@types/jsonwebtoken": "^9.0.10",
         "bun-plugin-tailwind": "^0.1.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -37,6 +37,7 @@
       "devDependencies": {
         "@biomejs/biome": "2.3.5",
         "@types/bun": "^1.3.2",
+        "@types/jsonwebtoken": "^9.0.10",
         "@types/react": "^19.2.4",
         "@types/react-dom": "^19.2.3",
       },
@@ -60,6 +61,10 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.3.5", "", { "os": "win32", "cpu": "arm64" }, "sha512-DlBiMlBZZ9eIq4H7RimDSGsYcOtfOIfZOaI5CqsWiSlbTfqbPVfWtCf92wNzx8GNMbu1s7/g3ZZESr6+GwM/SA=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.3.5", "", { "os": "win32", "cpu": "x64" }, "sha512-nUmR8gb6yvrKhtRgzwo/gDimPwnO5a4sCydf8ZS2kHIJhEmSmk+STsusr1LHTuM//wXppBawvSQi2xFXJCdgKQ=="],
+
+    "@datazod/shared": ["@datazod/shared@0.1.4", "", { "peerDependencies": { "zod": "^3.x" } }, "sha512-PWW6jNnbE1G+BznyFS1YRqrjvC7WNvt+xjn20Q79phg/cN9r4eXABF6e7DA9cOOYlhEuS5rE3iQk3hTD6t1CqQ=="],
+
+    "@datazod/zod-sql": ["@datazod/zod-sql@0.2.9", "", { "dependencies": { "@datazod/shared": "^0.1.4" }, "peerDependencies": { "zod": "^3.x" } }, "sha512-jt+47j2k6jpVNKwwNCquky7PPgt7zp7AGtpOTRd72ZvgkN+vSCYeCBJ3NvgjsTvt5fBI50XbgKXi7w6Ay7/Vqg=="],
 
     "@floating-ui/core": ["@floating-ui/core@1.7.3", "", { "dependencies": { "@floating-ui/utils": "^0.2.10" } }, "sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w=="],
 

@@ -12,4 +12,8 @@ export default class OpenrouterClient {
     async getCredits(): Promise<OpenRouter.CreditsResponse> {
         return this.client("/credits", { schema: OpenRouter.CreditsResponse });
     }
+
+    async getModels(): Promise<OpenRouter.ModelsResponse> {
+        return this.client("/models", { schema: OpenRouter.ModelsResponse });
+    }
 }
