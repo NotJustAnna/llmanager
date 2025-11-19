@@ -114,7 +114,7 @@ export default class GenerativeService {
 
     private getModel() {
         return this.database.getOrSetValue(
-            "settings.generative_model",
+            "settings.generativeModel",
             process.env.OPENWEBUI_DEFAULT_MODEL ?? "ollama.gemma3:12b",
         );
     }

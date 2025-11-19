@@ -8,13 +8,13 @@ export default class SettingsService {
 
     getSettings(): Settings {
         return {
-            generatedModel: this.database.getValue("settings.generatedModel"),
+            generativeModel: this.database.getValue("settings.generativeModel"),
         };
     }
 
     updateSettings(settings: Settings) {
-        if (settings.generatedModel != null) {
-            this.database.setValue("settings.generatedModel", settings.generatedModel);
+        if (settings.generativeModel != null) {
+            this.database.setValue("settings.generativeModel", settings.generativeModel);
         }
     }
 }
