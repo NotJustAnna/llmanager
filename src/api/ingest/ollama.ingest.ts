@@ -23,14 +23,20 @@ export default class OllamaIngest {
     ) {}
 
     start() {
-        this.ingestModels();
-        setInterval(() => this.ingestModels(), 60 * 1000); // every minute
+        this.scheduleIngest();
+    }
+
+    private async scheduleIngest() {
+        await this.ingestModels();
+        setTimeout(() => this.scheduleIngest(), 60 * 1000); // every minute after completion
     }
 
     async ingestModels() {
         const { models } = await this.client.getModels();
 
-        await Promise.all(models.map((it) => this.processModel(it)));
+        for (const model of models) {
+            await this.processModel(model);
+        }
     }
 
     /**
@@ -107,11 +113,7 @@ export default class OllamaIngest {
             data.extra_capabilities = extraCapabilities;
         }
 
-        let description = (await this.generativeService.generateDescription(data)) ?? "No description available.";
-
-        description += " | Local";
-
-        return description;
+        return (await this.generativeService.generateDescription(data)) ?? "No description available.";
     }
 
     private lookup = buildMap<string | RegExp, string>((map) => {

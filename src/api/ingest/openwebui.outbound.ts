@@ -66,14 +66,17 @@ export default class OpenWebUiOutbound {
             // Step 1: Fetch single model details from OpenWebUI using the model ID
             const model = await this.openwebui.getModelDetails(dbModel.id);
 
-            // Step 2: Build ModelForm with database updates merged with existing OpenWebUI data
+            // Step 2: Build the description with provider/pricing information
+            const description = this.buildDescriptionWithProvider(dbModel);
+
+            // Step 3: Build ModelForm with database updates merged with existing OpenWebUI data
             const modelForm = {
                 id: dbModel.id,
                 base_model_id: model?.base_model_id ?? null,
                 name: dbModel.name,
                 meta: {
                     ...(model?.meta ?? {}),
-                    description: dbModel.description ?? model?.meta?.description,
+                    description: description ?? model?.meta?.description,
                     profile_image_url: dbModel.imageUrl ?? model?.meta?.profile_image_url,
                 },
                 params: model?.params ?? {},
@@ -81,13 +84,13 @@ export default class OpenWebUiOutbound {
                 is_active: model?.is_active ?? true,
             };
 
-            // Step 3: Try to update the model
+            // Step 4: Try to update the model
             const updateSuccess = await this.openwebui.patchModel(dbModel.id, modelForm);
             if (updateSuccess) {
                 return true;
             }
 
-            // Step 4: Model not registered, create a registry entry with full ModelForm
+            // Step 5: Model not registered, create a registry entry with full ModelForm
             return await this.openwebui.createModel(modelForm);
         } catch (error) {
             console.error(
@@ -96,6 +99,25 @@ export default class OpenWebUiOutbound {
             );
             return false;
         }
+    }
+
+    /**
+     * Append provider/pricing information to the description based on model ID.
+     */
+    private buildDescriptionWithProvider(dbModel: DatabaseModel): string {
+        let description = dbModel.description;
+
+        if (dbModel.id.startsWith("ollama.")) {
+            description += " | Local";
+        } else if (dbModel.id.startsWith("openrouter.")) {
+            if (dbModel.id.endsWith(":free")) {
+                description += " | Free";
+            } else {
+                description += ` | Input: $${dbModel.promptPrice}/1M tokens | Output: $${dbModel.completionPrice}/1M tokens`;
+            }
+        }
+
+        return description;
     }
 
     /**

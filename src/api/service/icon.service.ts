@@ -49,11 +49,11 @@ export default class IconService {
 
     private async getOrDownloadIndex(): Promise<DirNode> {
         if (this._index) {
-            return this._index;
+            return this._index.children.find(it => it.name === "icons" && it.type === "directory") as DirNode;
         } else {
             const newIndex = await upfetch(this.indexUrl);
             this._index = newIndex;
-            return newIndex;
+            return newIndex.children.find((it: any) => it.name === "icons" && it.type === "directory") as DirNode;
         }
     }
 
@@ -76,7 +76,7 @@ export default class IconService {
             | DirNode
             | undefined;
         if (!brandNode) {
-            throw new Error(`This should never happen: brand ${brandNode} not found on index`);
+            throw new Error(`This should never happen: ${iconName} not found on index`);
         }
         let best: string | null = null;
         let bestRank = Number.MAX_SAFE_INTEGER;
@@ -91,6 +91,6 @@ export default class IconService {
         if (!best) {
             throw new Error(`This should never happen: no icons found for brand ${iconName}`);
         }
-        return `${this.baseUrl}/packages/${iconName}/${best}`;
+        return `${this.baseUrl}/packages/icons/${iconName}/${best}`;
     }
 }

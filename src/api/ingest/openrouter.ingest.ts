@@ -16,15 +16,21 @@ export default class OpenrouterIngest {
     ) {}
 
     start() {
-        this.ingestModels();
-        setInterval(() => this.ingestModels(), 60 * 1000); // every minute
+        this.scheduleIngest();
+    }
+
+    private async scheduleIngest() {
+        await this.ingestModels();
+        setTimeout(() => this.scheduleIngest(), 60 * 1000); // every minute after completion
     }
 
     async ingestModels() {
         const { data: models } = await this.client.getModels();
         const prefixes = this.calculateCommonPrefixes(models.map(({ id, name }) => ({ id, name })));
 
-        await Promise.all(models.map((it) => this.processModel(it, prefixes)));
+        for (const model of models) {
+            await this.processModel(model, prefixes);
+        }
     }
 
     /**
@@ -152,18 +158,11 @@ export default class OpenrouterIngest {
     }
 
     private async normalizedDescription(model: Openrouter.Model) {
-        let description =
+        return (
             (await this.generativeService.makeBriefDescription({
                 description: model.description,
                 model_name: model.name || model.id,
-            })) ?? model.description;
-
-        if (model.id.endsWith(":free")) {
-            description += " | Free";
-        } else {
-            description += ` | Input: ${model.pricing.prompt} | Output: ${model.pricing.completion}`;
-        }
-
-        return description;
+            })) ?? model.description
+        );
     }
 }
