@@ -1,6 +1,7 @@
 import { injectable } from "tsyringe";
 import OllamaIngest from "@/api/ingest/ollama.ingest.ts";
 import OpenrouterIngest from "@/api/ingest/openrouter.ingest.ts";
+import OpenWebUiOutbound from "@/api/ingest/openwebui.outbound.ts";
 import DatabaseService from "@/api/service/database.service.ts";
 import OpenWebUiClient from "@/api/client/openwebui.client.ts";
 import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
@@ -14,6 +15,7 @@ export default class ModelService {
         private readonly ollamaIngest: OllamaIngest,
         private readonly database: DatabaseService,
         private readonly openwebui: OpenWebUiClient,
+        private readonly openwebuiOutbound: OpenWebUiOutbound,
     ) {
         openrouterIngest.start();
         ollamaIngest.start();
@@ -81,6 +83,7 @@ export default class ModelService {
      * Update the allowlist for models by provider.
      * Groups models by provider and applies allowlists accordingly.
      * Only providers with models in the request will be affected.
+     * Asynchronously queues model metadata updates to OpenWebUI.
      */
     async updateAllowlist(whitelistIds: string[]): Promise<ControllerSchema.UpdateAllowlistRes> {
         // Group IDs by provider
@@ -92,6 +95,11 @@ export default class ModelService {
             const openAiConfig = this.buildOpenAiConfig(groupedIds.openrouter);
             await this.openwebui.updateOpenAiConfig(openAiConfig);
             counts.openrouter = groupedIds.openrouter.length;
+
+            // Queue async updates to OpenWebUI for each model
+            for (const modelId of this.prefixIds(groupedIds.openrouter, "openrouter")) {
+                this.openwebuiOutbound.queueModelUpdate(modelId);
+            }
         }
 
         // Update Ollama models if any
@@ -99,6 +107,11 @@ export default class ModelService {
             const ollamaConfig = this.buildOllamaConfig(groupedIds.ollama);
             await this.openwebui.updateOllamaConfig(ollamaConfig);
             counts.ollama = groupedIds.ollama.length;
+
+            // Queue async updates to OpenWebUI for each model
+            for (const modelId of this.prefixIds(groupedIds.ollama, "ollama")) {
+                this.openwebuiOutbound.queueModelUpdate(modelId);
+            }
         }
 
         // Count invalid IDs
@@ -109,6 +122,35 @@ export default class ModelService {
             modelCount: counts,
             message: `Allowlist updated: ${counts.openrouter} OpenRouter models, ${counts.ollama} Ollama models${counts.invalid > 0 ? `, ${counts.invalid} invalid` : ""}`,
         };
+    }
+
+    /**
+     * Edit a model's metadata (name and description).
+     * Synchronously updates OpenWebUI.
+     */
+    async editModel(
+        modelId: string,
+        updates: { name?: string; description?: string },
+    ): Promise<boolean> {
+        const dbModel = this.database.getModel(modelId);
+        if (!dbModel) {
+            console.warn(`Model "${modelId}" not found in database`);
+            return false;
+        }
+
+        // Apply updates to database model
+        if (updates.name) {
+            dbModel.name = updates.name;
+        }
+        if (updates.description) {
+            dbModel.description = updates.description;
+        }
+
+        // Update database
+        this.database.setModel(dbModel);
+
+        // Synchronously update OpenWebUI
+        return await this.openwebuiOutbound.syncUpdateModel(modelId);
     }
 
     private groupIdsByProvider(ids: string[]): {
@@ -126,6 +168,10 @@ export default class ModelService {
         }
 
         return grouped;
+    }
+
+    private prefixIds(ids: string[], provider: string): string[] {
+        return ids.map((id) => `${provider}.${id}`);
     }
 
     private buildOpenAiConfig(modelIds: string[]): OpenAiConfigRequest {

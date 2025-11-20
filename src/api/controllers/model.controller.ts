@@ -50,7 +50,26 @@ export default class ModelController {
         if (!this.auth.valid(req)) {
             return this.auth.reject();
         }
-        throw new Error("Method not implemented.");
+
+        // Parse and validate request body
+        const body = await req.json();
+        const parsedBody = ModelSchema.EditModelReq.parse(body);
+
+        // Update model via service
+        const success = await this.modelService.editModel(parsedBody.modelId, {
+            name: parsedBody.name,
+            description: parsedBody.description,
+        });
+
+        const result = {
+            success,
+            message: success
+                ? `Model "${parsedBody.modelId}" updated successfully`
+                : `Failed to update model "${parsedBody.modelId}"`,
+        };
+
+        // Parse and return response
+        return Response.json(ModelSchema.EditModelRes.parse(result));
     }
 
     /*

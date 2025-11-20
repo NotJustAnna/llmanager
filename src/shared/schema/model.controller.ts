@@ -36,3 +36,17 @@ export const UpdateAllowlistRes = z.object({
     message: z.string(),
 });
 export type UpdateAllowlistRes = z.infer<typeof UpdateAllowlistRes>;
+
+// Edit model schemas
+export const EditModelReq = z.object({
+    modelId: z.string(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+});
+export type EditModelReq = z.infer<typeof EditModelReq>;
+
+export const EditModelRes = z.object({
+    success: z.boolean(),
+    message: z.string(),
+});
+export type EditModelRes = z.infer<typeof EditModelRes>;

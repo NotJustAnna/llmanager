@@ -76,3 +76,56 @@ export const OllamaConfigRequestSchema = z.object({
     OLLAMA_API_CONFIGS: z.record(z.string(), OllamaConfigSchema),
 });
 export type OllamaConfigRequest = z.infer<typeof OllamaConfigRequestSchema>;
+
+// Model detail endpoints
+export const ModelMetaSchema = z
+    .object({
+        profile_image_url: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        capabilities: z.record(z.string(), z.any()).nullable().optional(),
+    })
+    .loose(); // server Pydantic models allow extra fields
+export type ModelMeta = z.infer<typeof ModelMetaSchema>;
+
+// Params is effectively free-form
+export const ModelParamsSchema = z.record(z.string(), z.any()).optional().nullable();
+export type ModelParams = z.infer<typeof ModelParamsSchema>;
+
+export const ModelDetailSchema = z.object({
+    id: z.string(),
+    user_id: z.string(),
+    base_model_id: z.string().optional().nullable(),
+    name: z.string(),
+    params: z.record(z.any(), z.any()).optional(),
+    meta: ModelMetaSchema.optional(),
+    access_control: z.any().optional().nullable(),
+    is_active: z.boolean(),
+    updated_at: z.number().int(),
+    created_at: z.number().int(),
+});
+export type ModelDetail = z.infer<typeof ModelDetailSchema>;
+
+// ModelForm expected by create/update handlers
+export const ModelFormSchema = z
+    .object({
+        id: z.string(),
+        base_model_id: z.string().optional().nullable(),
+        name: z.string(),
+        meta: ModelMetaSchema,
+        params: ModelParamsSchema,
+        access_control: z.record(z.string(), z.any()).optional().nullable(),
+        is_active: z.boolean().optional(),
+    })
+    .loose();
+export type ModelForm = z.infer<typeof ModelFormSchema>;
+
+export const CreateModelRequestSchema = z.object({
+    name: z.string(),
+    description: z.string().optional(),
+});
+export type CreateModelRequest = z.infer<typeof CreateModelRequestSchema>;
+
+export const UpdateModelRequestSchema = z.object({
+    description: z.string().optional(),
+});
+export type UpdateModelRequest = z.infer<typeof UpdateModelRequestSchema>;
