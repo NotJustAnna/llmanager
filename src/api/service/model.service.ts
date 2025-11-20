@@ -96,7 +96,7 @@ export default class ModelService {
         const completionNum = parseFloat(completionPrice);
         const requestNum = 0; // Default to 0; may need adjustment based on API structure
 
-        if (!isNaN(promptNum) && !isNaN(completionNum)) {
+        if (!isNaN(promptNum) && promptNum !== 0 && !isNaN(completionNum) && completionNum !== 0) {
             return {
                 type: "paid",
                 prompt: promptNum,

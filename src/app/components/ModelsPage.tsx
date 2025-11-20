@@ -1,8 +1,10 @@
-import {useState, useMemo, useEffect} from "react";
+import {useState, useMemo, useEffect, useCallback, useRef} from "react";
+import {useVirtualizer} from "@tanstack/react-virtual";
 import {useModels} from "../hooks/useModels";
 import {usePendingChanges} from "../hooks/usePendingChanges";
+import {useUpdateButton} from "../contexts/UpdateButtonContext";
 import {ModelCard} from "./ModelCard";
-import {FloatingUpdateButton} from "./FloatingUpdateButton";
+import type {Model} from "@/shared/schema/model.controller";
 import {Card} from "./ui/card";
 import {Input} from "./ui/input";
 import {Button} from "./ui/button";
@@ -26,13 +28,27 @@ interface ModelsPageProps {
 
 export function ModelsPage({source}: ModelsPageProps) {
     const {models, isLoading, error, updateAllowlist} = useModels(source);
-    const {hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges} = usePendingChanges();
+    const {hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges} = usePendingChanges();
+    const {setUpdateButton} = useUpdateButton();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
     const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">(source === "openrouter" ? "all" : "all");
     const [isSaving, setIsSaving] = useState(false);
 
     const currentAllowed = useMemo(() => new Set(models.filter((m) => m.allowed).map((m) => m.id)), [models]);
+
+    // Update the global update button state based on pending changes
+    useEffect(() => {
+        if (hasPendingChanges) {
+            setUpdateButton({
+                hasPendingChanges: true,
+                isLoading: isSaving,
+                onUpdate: handleSaveChanges,
+            });
+        } else {
+            setUpdateButton(null);
+        }
+    }, [hasPendingChanges, isSaving]);
 
     const filteredModels = useMemo(() => {
         return models.filter((model) => {
@@ -77,7 +93,7 @@ export function ModelsPage({source}: ModelsPageProps) {
         toggleModel(modelId);
     };
 
-    const handleSaveChanges = async () => {
+    const handleSaveChanges = useCallback(async () => {
         setIsSaving(true);
         try {
             const allowedIds = getPendingAllowlistIds(
@@ -92,7 +108,7 @@ export function ModelsPage({source}: ModelsPageProps) {
         } finally {
             setIsSaving(false);
         }
-    };
+    }, [models, currentAllowed, getPendingAllowlistIds, updateAllowlist, clearPendingChanges]);
 
     if (isLoading) {
         return (
@@ -122,8 +138,8 @@ export function ModelsPage({source}: ModelsPageProps) {
     }
 
     return (
-        <>
-            <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+        <div className="flex flex-col h-full">
+            <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex-shrink-0">
                 {/* Search and Filter Card */}
                 <Card className="p-4 mb-6 -space-y-2">
                     <div className="flex items-center gap-2">
@@ -136,7 +152,7 @@ export function ModelsPage({source}: ModelsPageProps) {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
+                    <div className="flex flex-wrap items-center justify-between space-x-2">
                         <div className="flex items-center gap-2 text-sm">
                             <span className="text-muted-foreground">Models which are</span>
 
@@ -146,12 +162,12 @@ export function ModelsPage({source}: ModelsPageProps) {
                                         {filterStatus === "all" ? "allowed and blocked" : filterStatus}
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-48">
+                                <DropdownMenuContent className="min-w-32">
                                     <DropdownMenuLabel>Status</DropdownMenuLabel>
                                     <DropdownMenuSeparator/>
                                     <DropdownMenuRadioGroup value={filterStatus}
                                                             onValueChange={(value) => setFilterStatus(value as "all" | "allowed" | "blocked")}>
-                                        <DropdownMenuRadioItem value="all">Allowed and blocked</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="all">All below</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="allowed">Allowed</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="blocked">Blocked</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
@@ -167,12 +183,12 @@ export function ModelsPage({source}: ModelsPageProps) {
                                                 {filterFree === "all" ? "free and paid" : filterFree}
                                             </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-48">
+                                        <DropdownMenuContent className="min-w-32">
                                             <DropdownMenuLabel>Pricing</DropdownMenuLabel>
                                             <DropdownMenuSeparator/>
                                             <DropdownMenuRadioGroup value={filterFree}
                                                                     onValueChange={(value) => setFilterFree(value as "all" | "free" | "paid")}>
-                                                <DropdownMenuRadioItem value="all">Free and paid</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="all">All below</DropdownMenuRadioItem>
                                                 <DropdownMenuRadioItem value="free">Free</DropdownMenuRadioItem>
                                                 <DropdownMenuRadioItem value="paid">Paid</DropdownMenuRadioItem>
                                             </DropdownMenuRadioGroup>
@@ -200,37 +216,100 @@ export function ModelsPage({source}: ModelsPageProps) {
                         </DropdownMenu>
                     </div>
                 </Card>
+            </div>
 
-                {/* Models Grid */}
-                {filteredModels.length === 0 ? (
+            {/* Models Grid - Takes up remaining space */}
+            {filteredModels.length === 0 ? (
+                <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full">
                     <Card className="p-8 text-center">
                         <p className="text-muted-foreground">No models found</p>
                     </Card>
-                ) : (
-                    <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                            Showing {filteredModels.length} of {models.length} models
-                        </p>
-                        <div className="grid gap-4">
-                            {filteredModels.map((model) => (
-                                <ModelCard
-                                    key={model.id}
-                                    model={model}
-                                    onToggle={() => handleToggleModel(model.id)}
-                                    isLoading={isSaving}
-                                    isOpenRouter={source === "openrouter"}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+                </div>
+            ) : (
+                <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col">
+                    <VirtualizedModelsList
+                        models={filteredModels}
+                        totalModels={models.length}
+                        onToggleModel={handleToggleModel}
+                        isSaving={isSaving}
+                        isOpenRouter={source === "openrouter"}
+                        pendingChanges={pendingChanges}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
 
-            <FloatingUpdateButton
-                hasPendingChanges={hasPendingChanges}
-                isLoading={isSaving}
-                onUpdate={handleSaveChanges}
-            />
-        </>
+interface VirtualizedModelsListProps {
+    models: Model[];
+    totalModels: number;
+    onToggleModel: (modelId: string) => void;
+    isSaving: boolean;
+    isOpenRouter: boolean;
+    pendingChanges: Set<string>;
+}
+
+function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, isOpenRouter, pendingChanges }: VirtualizedModelsListProps) {
+    const parentRef = useRef<HTMLDivElement>(null);
+
+    const virtualizer = useVirtualizer({
+        count: models.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 140, // Estimate card height in pixels
+        overscan: 5, // Render 5 items outside visible area for smoother scrolling
+        measureElement:
+            typeof window !== "undefined"
+                ? (element) => element?.getBoundingClientRect().height
+                : undefined,
+    });
+
+    const virtualItems = virtualizer.getVirtualItems();
+
+    return (
+        <div className="flex flex-col h-full">
+            <p className="text-sm text-muted-foreground mb-4 flex-shrink-0">
+                Showing {models.length} of {totalModels} models
+            </p>
+            <div
+                ref={parentRef}
+                className="flex-1 overflow-y-auto min-h-0"
+            >
+                <div
+                    style={{
+                        height: `${virtualizer.getTotalSize()}px`,
+                        width: "100%",
+                        position: "relative",
+                    }}
+                >
+                    {virtualItems.map((virtualItem) => {
+                        const model = models[virtualItem.index]!;
+                        return (
+                            <div
+                                key={virtualItem.key}
+                                data-index={virtualItem.index}
+                                ref={el => virtualizer.measureElement(el)}
+                                style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    transform: `translateY(${virtualItem.start}px)`,
+                                }}
+                                className="pb-4"
+                            >
+                                <ModelCard
+                                    model={model}
+                                    onToggle={() => onToggleModel(model.id)}
+                                    isLoading={isSaving}
+                                    isOpenRouter={isOpenRouter}
+                                    isPending={pendingChanges.has(model.id)}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
     );
 }

@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
+import { useUpdateButton } from "../contexts/UpdateButtonContext";
 import {
     Sidebar,
     SidebarContent,
@@ -19,7 +20,7 @@ import {
     useSidebar,
 } from "../components/ui/sidebar";
 import { Button } from "../components/ui/button";
-import { Moon, Sun, Settings, Router, Laptop, Menu } from "lucide-react";
+import { Moon, Sun, Settings, Router, Laptop, Menu, CheckCircle, Loader } from "lucide-react";
 import SettingsModal from "../components/SettingsModal";
 import { useState } from "react";
 import { Separator } from "@/app/components/ui/separator.tsx";
@@ -52,6 +53,7 @@ export default function MainLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const { state: updateButtonState } = useUpdateButton();
 
     const getBreadcrumbLabel = () => {
         switch (location.pathname) {
@@ -134,26 +136,47 @@ export default function MainLayout() {
             </Sidebar>
 
             <SidebarInset>
-                <header className="bg-background sticky top-0 flex shrink-0 items-center gap-2 border-b p-4">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="#" asChild>
-                                    <Link to={"/"}>Home</Link>
-                                </BreadcrumbLink>
-                            </BreadcrumbItem>
-                            {breadcrumbLabel && (
+                <header className="z-1 bg-background sticky top-0 flex shrink-0 items-center justify-between gap-2 border-b p-4">
+                    <div className="flex items-center gap-2">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+                        <Breadcrumb>
+                            <BreadcrumbList>
+                                <BreadcrumbItem>
+                                    <BreadcrumbLink href="#" asChild>
+                                        <Link to={"/"}>Home</Link>
+                                    </BreadcrumbLink>
+                                </BreadcrumbItem>
+                                {breadcrumbLabel && (
+                                    <>
+                                        <BreadcrumbSeparator />
+                                        <BreadcrumbItem>
+                                            <BreadcrumbPage>{breadcrumbLabel}</BreadcrumbPage>
+                                        </BreadcrumbItem>
+                                    </>
+                                )}
+                            </BreadcrumbList>
+                        </Breadcrumb>
+                    </div>
+                    {updateButtonState && updateButtonState.hasPendingChanges && (
+                        <Button
+                            onClick={updateButtonState.onUpdate}
+                            disabled={updateButtonState.isLoading}
+                            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            {updateButtonState.isLoading ? (
                                 <>
-                                    <BreadcrumbSeparator />
-                                    <BreadcrumbItem>
-                                        <BreadcrumbPage>{breadcrumbLabel}</BreadcrumbPage>
-                                    </BreadcrumbItem>
+                                    <Loader className="h-4 w-4 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle className="h-4 w-4" />
+                                    Update Changes
                                 </>
                             )}
-                        </BreadcrumbList>
-                    </Breadcrumb>
+                        </Button>
+                    )}
                 </header>
                 <main className="flex-1 overflow-auto">
                     <Outlet />

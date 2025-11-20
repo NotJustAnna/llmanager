@@ -1,6 +1,7 @@
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { type Model, Pricing } from "@/shared/schema/model.controller";
 import { AlertCircle, Check } from "lucide-react";
 
@@ -9,69 +10,108 @@ interface ModelCardProps {
     onToggle: () => void;
     isLoading?: boolean;
     isOpenRouter?: boolean;
+    isPending?: boolean;
 }
 
-export function ModelCard({ model, onToggle, isLoading = false, isOpenRouter = false }: ModelCardProps) {
+function formatTokensPerCent(price: number): string {
+    if (price === 0) return "Free";
+
+    const tokensPerCent = (1 / price) / 100;
+
+    const units = [
+        { threshold: 1_000_000_000, unit: "B" },
+        { threshold: 1_000_000, unit: "M" },
+        { threshold: 1_000, unit: "K" },
+    ];
+
+    for (const { threshold, unit } of units) {
+        if (tokensPerCent >= threshold) {
+            const value = (tokensPerCent / threshold).toFixed(1);
+            const formatted = value.endsWith(".0") ? value.slice(0, -2) : value;
+            return `${formatted}${unit}`;
+        }
+    }
+
+    const value = tokensPerCent.toFixed(1);
+    const formatted = value.endsWith(".0") ? value.slice(0, -2) : value;
+    return `${formatted}`;
+}
+
+export function ModelCard({ model, onToggle, isLoading = false, isOpenRouter = false, isPending = false }: ModelCardProps) {
     const isFree = model.pricing.type === "free";
     const modelId = model.id.split(".")[1] || model.id;
 
+    // Determine the visual state: if pending, show the opposite of current state
+    const visuallyAllowed = isPending ? !model.allowed : model.allowed;
+
     return (
-        <Card className="p-4 hover:shadow-lg transition-shadow">
-            <div className="flex gap-4">
-                {/* Model image */}
-                <div className="flex-shrink-0 hidden sm:block">
-                    <img
-                        src={model.imageUrl.toString()}
-                        alt={model.name}
-                        className="h-12 w-12 rounded-full object-cover"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23e5e7eb' width='100' height='100'/%3E%3C/svg%3E";
-                        }}
-                    />
-                </div>
+        <Card className="p-4 hover:shadow-lg transition-shadow gap-1">
+            <div className="flex gap-4 mb-3 items-center">
+                {/* Model avatar */}
+                <Avatar className="h-12 w-12 flex-shrink-0 hidden sm:block">
+                    <AvatarImage src={model.imageUrl.toString()} alt={model.name} />
+                    <AvatarFallback>{model.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
 
                 {/* Model info */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                             <h3 className="font-semibold text-sm md:text-base truncate">{model.name}</h3>
                             <p className="text-xs text-muted-foreground truncate">{modelId}</p>
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {isFree && <Badge variant="outline">Free</Badge>}
-                        {isOpenRouter && isFree && <Badge variant="outline">OpenRouter</Badge>}
-                        {model.allowed && (
+                {/* Toggle switch */}
+                <div className="flex-shrink-0 flex pt-1 items-center gap-3">
+                    <div className="flex flex-wrap gap-2">
+                        {isOpenRouter && isFree && <Badge variant="outline">Free</Badge>}
+                        {!isOpenRouter && isFree && <Badge variant="outline">Local</Badge>}
+                        {visuallyAllowed && (
                             <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100">
                                 <Check className="h-3 w-3 mr-1" />
                                 Allowed
                             </Badge>
                         )}
-                        {!model.allowed && (
+                        {!visuallyAllowed && (
                             <Badge variant="secondary">
                                 <AlertCircle className="h-3 w-3 mr-1" />
                                 Blocked
                             </Badge>
                         )}
+                        {isPending && (
+                            <Badge className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100">
+                                Pending
+                            </Badge>
+                        )}
                     </div>
 
-                    <p className="text-xs md:text-sm text-muted-foreground mb-3 line-clamp-2">{model.description}</p>
+                    <Switch checked={visuallyAllowed} onCheckedChange={onToggle} disabled={isLoading} />
+                </div>
+            </div>
 
-                    {/* Pricing info */}
-                    {model.pricing.type === "paid" && (
-                        <div className="text-xs space-y-1 text-muted-foreground mb-3">
-                            <p>Prompt: ${model.pricing.prompt}/1M tokens</p>
-                            <p>Completion: ${model.pricing.completion}/1M tokens</p>
+            {/* Description and pricing info side by side */}
+            <div className="flex gap-4">
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 flex-1">{model.description}</p>
+
+                {/* Pricing info card */}
+                {model.pricing.type === "paid" && (
+                    <Card className="bg-muted/50 p-2 flex-shrink-0">
+                        <div className="text-xs space-y-0.5 text-muted-foreground text-right">
+                            <div>
+                                <span className="font-medium text-foreground pr-1.5">Input:</span>
+                                {formatTokensPerCent(model.pricing.prompt)}
+                                <span className="pl-1.5 text-foreground">t/¢</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-foreground pr-1.5">Output:</span>
+                                {formatTokensPerCent(model.pricing.completion)}
+                                <span className="pl-1.5 text-foreground">t/¢</span>
+                            </div>
                         </div>
-                    )}
-                </div>
-
-                {/* Toggle switch */}
-                <div className="flex-shrink-0 flex items-start pt-1">
-                    <Switch checked={model.allowed} onCheckedChange={onToggle} disabled={isLoading} />
-                </div>
+                    </Card>
+                )}
             </div>
         </Card>
     );
