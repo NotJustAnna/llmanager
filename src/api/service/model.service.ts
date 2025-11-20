@@ -8,6 +8,11 @@ import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
 import * as ControllerSchema from "@/shared/schema/model.controller.ts";
 import type { OpenAiConfigRequest, OllamaConfigRequest } from "@/api/schema/openwebui.client.ts";
 
+interface EditModelUpdates {
+    name?: string;
+    description?: string;
+}
+
 @injectable()
 export default class ModelService {
     constructor(
@@ -15,7 +20,7 @@ export default class ModelService {
         private readonly ollamaIngest: OllamaIngest,
         private readonly database: DatabaseService,
         private readonly openwebui: OpenWebUiClient,
-        private readonly openwebuiOutbound: OpenWebUiOutbound,
+        private readonly outbound: OpenWebUiOutbound,
     ) {
         openrouterIngest.start();
         ollamaIngest.start();
@@ -98,7 +103,7 @@ export default class ModelService {
 
             // Queue async updates to OpenWebUI for each model
             for (const modelId of this.prefixIds(groupedIds.openrouter, "openrouter")) {
-                this.openwebuiOutbound.queueModelUpdate(modelId);
+                this.outbound.queueModelUpdate(modelId);
             }
         }
 
@@ -110,7 +115,7 @@ export default class ModelService {
 
             // Queue async updates to OpenWebUI for each model
             for (const modelId of this.prefixIds(groupedIds.ollama, "ollama")) {
-                this.openwebuiOutbound.queueModelUpdate(modelId);
+                this.outbound.queueModelUpdate(modelId);
             }
         }
 
@@ -126,16 +131,37 @@ export default class ModelService {
 
     /**
      * Edit a model's metadata (name and description).
+     * Supports "<auto>" values to auto-generate name and description based on provider rules.
+     * Queries the provider APIs for fresh, up-to-date information.
      * Synchronously updates OpenWebUI.
      */
-    async editModel(
-        modelId: string,
-        updates: { name?: string; description?: string },
-    ): Promise<boolean> {
+    async editModel(modelId: string, updates: EditModelUpdates): Promise<boolean> {
         const dbModel = this.database.getModel(modelId);
         if (!dbModel) {
             console.warn(`Model "${modelId}" not found in database`);
             return false;
+        }
+
+        // Handle "<auto>" for name
+        if (updates.name === "<auto>") {
+            if (dbModel.id.startsWith("ollama.")) {
+                const modelName = dbModel.id.substring("ollama.".length);
+                updates.name = await this.ollamaIngest.generateAutoName(modelName);
+            } else if (dbModel.id.startsWith("openrouter.")) {
+                const modelId = dbModel.id.substring("openrouter.".length);
+                updates.name = await this.openrouterIngest.generateAutoName(modelId);
+            }
+        }
+
+        // Handle "<auto>" for description
+        if (updates.description === "<auto>") {
+            if (dbModel.id.startsWith("ollama.")) {
+                const modelName = dbModel.id.substring("ollama.".length);
+                updates.description = await this.ollamaIngest.generateAutoDescription(modelName);
+            } else if (dbModel.id.startsWith("openrouter.")) {
+                const modelId = dbModel.id.substring("openrouter.".length);
+                updates.description = await this.openrouterIngest.generateAutoDescription(modelId);
+            }
         }
 
         // Apply updates to database model
@@ -150,7 +176,7 @@ export default class ModelService {
         this.database.setModel(dbModel);
 
         // Synchronously update OpenWebUI
-        return await this.openwebuiOutbound.syncUpdateModel(modelId);
+        return await this.outbound.syncUpdateModel(modelId);
     }
 
     private groupIdsByProvider(ids: string[]): {

@@ -27,6 +27,31 @@ export default class OpenrouterIngest {
         await Promise.all(models.map((it) => this.processModel(it, prefixes)));
     }
 
+    /**
+     * Generate auto name for a model by querying OpenRouter API for fresh data.
+     */
+    async generateAutoName(modelId: string): Promise<string> {
+        const { data: models } = await this.client.getModels();
+        const model = models.find((m) => m.id === modelId);
+        if (!model) {
+            return modelId; // fallback to original ID
+        }
+        const prefixes = this.calculateCommonPrefixes(models.map(({ id, name }) => ({ id, name })));
+        return this.normalizedName(model, prefixes);
+    }
+
+    /**
+     * Generate auto description for a model by querying OpenRouter API for fresh data.
+     */
+    async generateAutoDescription(modelId: string): Promise<string> {
+        const { data: models } = await this.client.getModels();
+        const model = models.find((m) => m.id === modelId);
+        if (!model) {
+            return "No description available.";
+        }
+        return this.normalizedDescription(model);
+    }
+
     async processModel(model: Openrouter.Model, prefixes: Record<string, string>) {
         const id = `openrouter.${model.id}`;
         if (this.database.getModel(id) != null) {

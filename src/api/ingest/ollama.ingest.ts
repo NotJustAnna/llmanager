@@ -33,6 +33,31 @@ export default class OllamaIngest {
         await Promise.all(models.map((it) => this.processModel(it)));
     }
 
+    /**
+     * Generate auto name for a model by querying Ollama API for fresh data.
+     */
+    async generateAutoName(modelName: string): Promise<string> {
+        const models = await this.client.getModels();
+        const model = models.models.find((m) => m.name === modelName);
+        if (!model) {
+            return modelName; // fallback to original name
+        }
+        return this.normalizedName(model);
+    }
+
+    /**
+     * Generate auto description for a model by querying Ollama API for fresh data.
+     */
+    async generateAutoDescription(modelName: string): Promise<string> {
+        const detail = await this.client.getDetails(modelName);
+        const models = await this.client.getModels();
+        const model = models.models.find((m) => m.name === modelName);
+        if (!model) {
+            return "No description available.";
+        }
+        return this.normalizedDescription(model, detail);
+    }
+
     async processModel(model: Ollama.Model) {
         const id = `ollama.${model.name}`;
         if (this.database.getModel(id) != null) {
