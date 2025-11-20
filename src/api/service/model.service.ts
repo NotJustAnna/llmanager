@@ -46,6 +46,7 @@ export default class ModelService {
 
     private transformModel(dbModel: DatabaseModel): ControllerSchema.Model {
         const pricing = this.parsePricing(dbModel.promptPrice, dbModel.completionPrice);
+        const allowed = this.isModelAllowed(dbModel.id);
 
         return {
             name: dbModel.name,
@@ -53,8 +54,35 @@ export default class ModelService {
             description: dbModel.description,
             pricing,
             imageUrl: dbModel.imageUrl,
-            allowed: true, // Default to true; will be implemented when allowlist functionality is added
+            allowed,
         };
+    }
+
+    private isModelAllowed(modelId: string): boolean {
+        if (modelId.startsWith("openrouter.")) {
+            const allowlist = this.getProviderAllowlist("openrouter");
+            return allowlist.includes(modelId);
+        } else if (modelId.startsWith("ollama.")) {
+            const allowlist = this.getProviderAllowlist("ollama");
+            return allowlist.includes(modelId);
+        }
+        return false;
+    }
+
+    private getProviderAllowlist(provider: "openrouter" | "ollama"): string[] {
+        const allowlistJson = this.database.getValue(`allowlist:${provider}`);
+        if (!allowlistJson) {
+            return [];
+        }
+        try {
+            return JSON.parse(allowlistJson);
+        } catch {
+            return [];
+        }
+    }
+
+    private setProviderAllowlist(provider: "openrouter" | "ollama", modelIds: string[]): void {
+        this.database.setValue(`allowlist:${provider}`, JSON.stringify(modelIds));
     }
 
     private parsePricing(
@@ -100,6 +128,7 @@ export default class ModelService {
             const openAiConfig = this.buildOpenAiConfig(groupedIds.openrouter);
             await this.openwebui.updateOpenAiConfig(openAiConfig);
             counts.openrouter = groupedIds.openrouter.length;
+            this.setProviderAllowlist("openrouter", this.prefixIds(groupedIds.openrouter, "openrouter"));
 
             // Queue async updates to OpenWebUI for each model
             for (const modelId of this.prefixIds(groupedIds.openrouter, "openrouter")) {
@@ -112,6 +141,7 @@ export default class ModelService {
             const ollamaConfig = this.buildOllamaConfig(groupedIds.ollama);
             await this.openwebui.updateOllamaConfig(ollamaConfig);
             counts.ollama = groupedIds.ollama.length;
+            this.setProviderAllowlist("ollama", this.prefixIds(groupedIds.ollama, "ollama"));
 
             // Queue async updates to OpenWebUI for each model
             for (const modelId of this.prefixIds(groupedIds.ollama, "ollama")) {
