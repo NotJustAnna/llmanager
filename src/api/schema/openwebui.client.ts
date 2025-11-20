@@ -20,7 +20,7 @@ export type CompletionRequest = z.infer<typeof CompletionRequestSchema>;
 export const MessageSchema = z.object({
     role: z.enum(["user", "assistant", "system"]),
     content: z.string(),
-    reasoning_content: z.string(),
+    reasoning_content: z.string().optional(),
 });
 export type Message = z.infer<typeof MessageSchema>;
 
@@ -124,8 +124,3 @@ export const CreateModelRequestSchema = z.object({
     description: z.string().optional(),
 });
 export type CreateModelRequest = z.infer<typeof CreateModelRequestSchema>;
-
-export const UpdateModelRequestSchema = z.object({
-    description: z.string().optional(),
-});
-export type UpdateModelRequest = z.infer<typeof UpdateModelRequestSchema>;

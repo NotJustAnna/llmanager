@@ -7,11 +7,9 @@ import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
  * OpenWebUI outbound integration for model metadata updates.
  *
  * Handles both synchronous and asynchronous model metadata updates to OpenWebUI
- * and the local database. Uses the idempotent upsert pattern as documented in
- * OPENWEBUI_SHENANIGANS.md:
- * 1. Try to PATCH (update) the registry entry via `/api/v1/models/{id}`
- * 2. If update fails with 404/409/422, call POST `/api/v1/models/create`
- * 3. Retry update if needed
+ * and the local database. Uses the upsert pattern per LLM_QUERIES.md:
+ * 1. Try to PATCH (update) the registry entry via `/api/v1/models/model/update?id={id}`
+ * 2. If update fails (model not registered), POST full ModelForm to `/api/v1/models/create`
  *
  * Provides queue-based async updates via queueModelUpdate() and immediate
  * synchronous updates via syncUpdateModel().
@@ -59,32 +57,28 @@ export default class OpenWebUiOutbound {
     }
 
     /**
-     * Main update logic: try update → create → retry pattern.
+     * Main update logic: try update → create pattern.
      * Updates OpenWebUI with model metadata from the database model.
+     * Per LLM_QUERIES.md, POST /api/v1/models/create accepts full ModelForm structure.
      */
     private async updateModelMetadata(dbModel: DatabaseModel): Promise<boolean> {
         try {
             // Step 1: Fetch single model details from OpenWebUI using the model ID
             const model = await this.openwebui.getModelDetails(dbModel.id);
 
-            if (!model) {
-                console.warn(`Model "${dbModel.id}" not found on OpenWebUI`);
-                return false;
-            }
-
-            // Step 2: Merge current model data with database updates to create full ModelForm
+            // Step 2: Build ModelForm with database updates merged with existing OpenWebUI data
             const modelForm = {
                 id: dbModel.id,
-                base_model_id: model.base_model_id ?? null,
+                base_model_id: model?.base_model_id ?? null,
                 name: dbModel.name,
                 meta: {
-                    ...(model.meta ?? {}),
-                    description: dbModel.description ?? model.meta?.description,
-                    profile_image_url: dbModel.imageUrl ?? model.meta?.profile_image_url,
+                    ...(model?.meta ?? {}),
+                    description: dbModel.description ?? model?.meta?.description,
+                    profile_image_url: dbModel.imageUrl ?? model?.meta?.profile_image_url,
                 },
-                params: model.params ?? {},
-                access_control: model.access_control ?? null,
-                is_active: model.is_active ?? true,
+                params: model?.params ?? {},
+                access_control: model?.access_control ?? null,
+                is_active: model?.is_active ?? true,
             };
 
             // Step 3: Try to update the model
@@ -93,16 +87,8 @@ export default class OpenWebUiOutbound {
                 return true;
             }
 
-            // Step 4: Model not registered, try to create a registry entry
-            const createSuccess = await this.openwebui.createModel(dbModel.name, {
-                description: dbModel.description,
-            });
-            if (createSuccess) {
-                // Step 5: Retry update after creation
-                return await this.openwebui.patchModel(dbModel.id, modelForm);
-            }
-
-            return createSuccess;
+            // Step 4: Model not registered, create a registry entry with full ModelForm
+            return await this.openwebui.createModel(modelForm);
         } catch (error) {
             console.error(
                 `Failed to update model metadata for "${dbModel.id}":`,

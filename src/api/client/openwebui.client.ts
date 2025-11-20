@@ -14,19 +14,18 @@ import {
     ModelFormSchema,
     type CreateModelRequest,
     CreateModelRequestSchema,
-    type UpdateModelRequest,
-    UpdateModelRequestSchema,
 } from "@/api/schema/openwebui.client.ts";
 
 @injectable()
 export default class OpenWebUiClient {
     private client = up(fetch, () => ({
-        baseUrl: process.env.OPENWEBUI_API_URL ?? "https://localhost:3000",
+        baseUrl: process.env.OPENWEBUI_API_URL ?? "http://localhost:3000",
         headers: { Authorization: `Bearer ${process.env.OPENWEBUI_API_KEY}` },
     }));
 
     async complete(req: CompletionRequest): Promise<CompletionResponse> {
         return this.client("/api/chat/completions", {
+            method: "POST",
             body: req,
             schema: CompletionResponseSchema,
         });
@@ -108,22 +107,19 @@ export default class OpenWebUiClient {
 
     /**
      * Create a new model registry entry.
+     * Accepts full CreateModelRequest (same structure as ModelForm).
      * Returns true if successful, false otherwise.
      */
-    async createModel(
-        modelName: string,
-        metadata: Omit<CreateModelRequest, "name">,
-    ): Promise<boolean> {
+    async createModel(createRequest: CreateModelRequest): Promise<boolean> {
         try {
-            const payload: CreateModelRequest = { name: modelName, ...metadata };
-            CreateModelRequestSchema.parse(payload);
+            CreateModelRequestSchema.parse(createRequest);
             await this.client("/api/v1/models/create", {
                 method: "POST",
-                body: payload,
+                body: createRequest,
             });
             return true;
         } catch (error) {
-            console.error(`Error creating model "${modelName}":`, error);
+            console.error(`Error creating model "${createRequest.name}":`, error);
             return false;
         }
     }
