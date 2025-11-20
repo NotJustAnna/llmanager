@@ -1,9 +1,14 @@
 import { injectable } from "tsyringe";
 import AuthMiddleware from "@/api/middleware/auth.middleware.ts";
+import ModelService from "@/api/service/model.service.ts";
+import * as ModelSchema from "@/shared/schema/model.controller.ts";
 
 @injectable()
 export default class ModelController {
-    constructor(private readonly auth: AuthMiddleware) {}
+    constructor(
+        private readonly auth: AuthMiddleware,
+        private readonly modelService: ModelService,
+    ) {}
 
     /*
      * Gets all models from all integrated providers.
@@ -15,7 +20,24 @@ export default class ModelController {
         if (!this.auth.valid(req)) {
             return this.auth.reject();
         }
-        throw new Error("Method not implemented.");
+
+        // Extract provider from query parameters
+        const url = new URL(req.url);
+        const provider = url.searchParams.get("provider");
+
+        // Validate provider parameter if provided
+        if (provider && provider !== "openrouter" && provider !== "ollama") {
+            return Response.json(
+                { error: 'Invalid provider. Must be "openrouter" or "ollama".' },
+                { status: 400 },
+            );
+        }
+
+        // Get models from service
+        const models = this.modelService.listModels(provider as "openrouter" | "ollama" | undefined);
+
+        // Parse and return models using the schema
+        return Response.json(models.map((model) => ModelSchema.Model.parse(model)));
     }
 
     /*
@@ -41,6 +63,15 @@ export default class ModelController {
         if (!this.auth.valid(req)) {
             return this.auth.reject();
         }
-        throw new Error("Method not implemented.");
+
+        // Parse and validate request body
+        const body = await req.json();
+        const parsedBody = ModelSchema.UpdateAllowlistReq.parse(body);
+
+        // Update allowlist via service
+        const result = await this.modelService.updateAllowlist(parsedBody.whitelistIds);
+
+        // Parse and return response
+        return Response.json(ModelSchema.UpdateAllowlistRes.parse(result));
     }
 }

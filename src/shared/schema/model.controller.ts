@@ -15,3 +15,24 @@ export const Model = z.object({
     allowed: z.boolean(),
 });
 export type Model = z.infer<typeof Model>;
+
+// Allowlist update schemas
+export const UpdateAllowlistReq = z.object({
+    whitelistIds: z.array(
+        z.string().refine((id) => id.startsWith("ollama.") || id.startsWith("openrouter."), {
+            message: 'Model ID must start with "ollama." or "openrouter."',
+        }),
+    ),
+});
+export type UpdateAllowlistReq = z.infer<typeof UpdateAllowlistReq>;
+
+export const UpdateAllowlistRes = z.object({
+    success: z.literal(true),
+    modelCount: z.object({
+        openrouter: z.number(),
+        ollama: z.number(),
+        invalid: z.number(),
+    }),
+    message: z.string(),
+});
+export type UpdateAllowlistRes = z.infer<typeof UpdateAllowlistRes>;

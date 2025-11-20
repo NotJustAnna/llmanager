@@ -38,3 +38,41 @@ export const CompletionResponseSchema = z.object({
     object: z.literal("chat.completion"),
 });
 export type CompletionResponse = z.infer<typeof CompletionResponseSchema>;
+
+// OpenAI API Config
+export const OpenAiConfigSchema = z.object({
+    enable: z.boolean(),
+    tags: z.array(z.object({ name: z.string() })),
+    prefix_id: z.string(),
+    model_ids: z.array(z.string()),
+    connection_type: z.enum(["external", "local"]),
+    auth_type: z.string(),
+});
+export type OpenAiConfig = z.infer<typeof OpenAiConfigSchema>;
+
+export const OpenAiConfigRequestSchema = z.object({
+    ENABLE_OPENAI_API: z.boolean(),
+    OPENAI_API_BASE_URLS: z.array(z.string()),
+    OPENAI_API_KEYS: z.array(z.string()),
+    OPENAI_API_CONFIGS: z.record(z.string(), OpenAiConfigSchema),
+});
+export type OpenAiConfigRequest = z.infer<typeof OpenAiConfigRequestSchema>;
+
+// Ollama API Config
+export const OllamaConfigSchema = z.object({
+    enable: z.boolean(),
+    tags: z.array(z.object({ name: z.string() })),
+    prefix_id: z.string(),
+    model_ids: z.array(z.string()),
+    connection_type: z.enum(["external", "local"]),
+    auth_type: z.string(),
+    key: z.string().optional(),
+});
+export type OllamaConfig = z.infer<typeof OllamaConfigSchema>;
+
+export const OllamaConfigRequestSchema = z.object({
+    ENABLE_OLLAMA_API: z.boolean(),
+    OLLAMA_BASE_URLS: z.array(z.string()),
+    OLLAMA_API_CONFIGS: z.record(z.string(), OllamaConfigSchema),
+});
+export type OllamaConfigRequest = z.infer<typeof OllamaConfigRequestSchema>;
