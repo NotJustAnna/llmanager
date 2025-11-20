@@ -67,7 +67,7 @@ export default class OpenrouterIngest {
             id,
             name: this.normalizedName(model, prefixes),
             description: await this.normalizedDescription(model),
-            imageUrl: await this.iconService.getIconForModel(model.id),
+            imageUrl: await this.iconService.getIconForModel(model.id, "openrouter"),
             promptPrice: model.pricing.prompt.toString(),
             completionPrice: model.pricing.completion.toString(),
         };

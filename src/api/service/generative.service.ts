@@ -2,7 +2,7 @@ import { injectable } from "tsyringe";
 import OpenWebUiClient from "@/api/client/openwebui.client.ts";
 import DatabaseService from "@/api/service/database.service.ts";
 import type { JsonObject } from "../lib/types";
-import {log4js} from "@notjustanna/log4js";
+import { log4js } from "@notjustanna/log4js";
 
 const BRIEF_DESCRIPTION_PROMPT = `
 You are a description processing agent.
@@ -95,18 +95,24 @@ export default class GenerativeService {
 
                 const content = res.choices[0]?.message?.content;
                 if (!content) {
-                    this.logger.debug(`makeBriefDescription completed (no content) in ${Date.now() - startTime}ms`, { data });
+                    this.logger.debug(`makeBriefDescription completed (no content) in ${Date.now() - startTime}ms`, {
+                        data,
+                    });
                     return null;
                 }
 
                 const jsonMatch = content.match(descriptionJsonRegex);
                 if (jsonMatch) {
                     const description = JSON.parse(jsonMatch[0]).description as string;
-                    this.logger.debug(`makeBriefDescription completed successfully in ${Date.now() - startTime}ms`, { data });
+                    this.logger.debug(`makeBriefDescription completed successfully in ${Date.now() - startTime}ms`, {
+                        data,
+                    });
                     return description;
                 }
 
-                this.logger.debug(`makeBriefDescription completed (no JSON match) in ${Date.now() - startTime}ms`, { data });
+                this.logger.debug(`makeBriefDescription completed (no JSON match) in ${Date.now() - startTime}ms`, {
+                    data,
+                });
                 return null;
             } catch (error) {
                 this.logger.debug(`makeBriefDescription failed after ${Date.now() - startTime}ms: ${error}`, { data });
@@ -139,18 +145,24 @@ export default class GenerativeService {
 
                 const content = res.choices[0]?.message?.content;
                 if (!content) {
-                    this.logger.debug(`generateDescription completed (no content) in ${Date.now() - startTime}ms`, { data });
+                    this.logger.debug(`generateDescription completed (no content) in ${Date.now() - startTime}ms`, {
+                        data,
+                    });
                     return null;
                 }
 
                 const jsonMatch = content.match(descriptionJsonRegex);
                 if (jsonMatch) {
                     const description = JSON.parse(jsonMatch[0]).description as string;
-                    this.logger.debug(`generateDescription completed successfully in ${Date.now() - startTime}ms`, { data });
+                    this.logger.debug(`generateDescription completed successfully in ${Date.now() - startTime}ms`, {
+                        data,
+                    });
                     return description;
                 }
 
-                this.logger.debug(`generateDescription completed (no JSON match) in ${Date.now() - startTime}ms`, { data });
+                this.logger.debug(`generateDescription completed (no JSON match) in ${Date.now() - startTime}ms`, {
+                    data,
+                });
                 return null;
             } catch (error) {
                 this.logger.debug(`generateDescription failed after ${Date.now() - startTime}ms: ${error}`, { data });

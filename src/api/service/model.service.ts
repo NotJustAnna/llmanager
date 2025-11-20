@@ -85,10 +85,7 @@ export default class ModelService {
         this.database.setValue(`allowlist:${provider}`, JSON.stringify(modelIds));
     }
 
-    private parsePricing(
-        promptPrice: string,
-        completionPrice: string,
-    ): ControllerSchema.Pricing {
+    private parsePricing(promptPrice: string, completionPrice: string): ControllerSchema.Pricing {
         // Check if both prices are "Local" (Ollama case)
         if (promptPrice === "Local" && completionPrice === "Local") {
             return { type: "free" };

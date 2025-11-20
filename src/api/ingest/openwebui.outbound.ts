@@ -31,10 +31,7 @@ export default class OpenWebUiOutbound {
      * The background task will process queued models periodically.
      */
     queueModelUpdate(modelId: string): void {
-        if (
-            OpenWebUiOutbound.addToSet(this.modelUpdateQueue, modelId) &&
-            !this.isBackgroundUpdating
-        ) {
+        if (OpenWebUiOutbound.addToSet(this.modelUpdateQueue, modelId) && !this.isBackgroundUpdating) {
             this.isBackgroundUpdating = true;
             this.backgroundUpdateLoop().finally(() => {
                 this.isBackgroundUpdating = false;
@@ -93,10 +90,7 @@ export default class OpenWebUiOutbound {
             // Step 5: Model not registered, create a registry entry with full ModelForm
             return await this.openwebui.createModel(modelForm);
         } catch (error) {
-            console.error(
-                `Failed to update model metadata for "${dbModel.id}":`,
-                error,
-            );
+            console.error(`Failed to update model metadata for "${dbModel.id}":`, error);
             return false;
         }
     }

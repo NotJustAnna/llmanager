@@ -90,12 +90,7 @@ export default class OpenWebUiClient {
         } catch (error) {
             if (error instanceof Response) {
                 // 401/404/422/409 indicate the model needs to be created first
-                if (
-                    error.status === 401 ||
-                    error.status === 404 ||
-                    error.status === 422 ||
-                    error.status === 409
-                ) {
+                if (error.status === 401 || error.status === 404 || error.status === 422 || error.status === 409) {
                     return false;
                 }
                 throw error;

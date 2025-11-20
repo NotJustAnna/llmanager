@@ -5,12 +5,12 @@ type FileNode = { name: string } & ({ type: "file" } | { type: "directory"; chil
 
 type DirNode = FileNode & { type: "directory" };
 
-function indexedLookup(str: string, values: string[], override: Record<string, string> = {}) {
+function indexedLookup(str: string, values: string[]) {
     const matches: Record<string, number> = {};
     for (const v of values) {
         const i = str.indexOf(v);
         if (i >= 0) {
-            matches[override[v] ?? v] = i;
+            matches[v] = i;
         }
     }
     return Object.entries(matches)
@@ -24,10 +24,25 @@ export default class IconService {
     private readonly indexUrl = `${this.baseUrl}/packages/index.json`;
     private _index: DirNode | null = null;
     private readonly iconOverride: Record<string, string> = {
+        // Personal joke: Microsoft & Phi should use the Copilot icon
         microsoft: "copilot",
         phi: "copilot",
+        // Personal preference: use Ollama icons for Llama models
         llama: "ollama",
+        // Actual overrides
         granite: "ibm",
+        qwq: "qwen",
+        "z-ai": "zai",
+        // Removing modifiers that don't help with icon selection
+        exacto: "",
+        free: "",
+        instruct: "",
+        reasoning: "",
+        reason: "",
+        thinking: "",
+        think: "",
+        turbo: "",
+        audio: "",
     };
     private readonly preferredIconOrder = [
         "dark-colorbg-avatarfit",
@@ -38,18 +53,18 @@ export default class IconService {
         "light-bg-avatarfit",
     ].flatMap((it) => [`${it}.webp`, `${it}.png`]);
 
-    async getIconForModel(modelId: string): Promise<string> {
+    async getIconForModel(modelId: string, defaultValue: string): Promise<string> {
         const index = await this.getOrDownloadIndex();
         const brands = index.children.map((it) => it.name);
         const iconNames = this.extractIconNames(modelId, brands);
 
-        const iconName = iconNames[0] ?? "openrouter"; // Assume OpenRouter is always there.
+        const iconName = iconNames[0] ?? defaultValue;
         return this.getBestIconOfBrand(index, iconName);
     }
 
     private async getOrDownloadIndex(): Promise<DirNode> {
         if (this._index) {
-            return this._index.children.find(it => it.name === "icons" && it.type === "directory") as DirNode;
+            return this._index.children.find((it) => it.name === "icons" && it.type === "directory") as DirNode;
         } else {
             const newIndex = await upfetch(this.indexUrl);
             this._index = newIndex;
@@ -58,16 +73,19 @@ export default class IconService {
     }
 
     private extractIconNames(modelId: string, brands: string[]): string[] {
-        if (modelId.includes("/")) {
+        // Apply overrides to modelId string (find and replace)
+        let effectiveModelId = modelId;
+        for (const [key, value] of Object.entries(this.iconOverride)) {
+            effectiveModelId = effectiveModelId.replaceAll(key, value);
+        }
+
+        if (effectiveModelId.includes("/")) {
             // Handle OpenRouter-style names (provider/model)
-            const [provider, modelPart] = modelId.split("/", 2) as [string, string];
-            return [
-                ...indexedLookup(modelPart, brands, this.iconOverride),
-                ...indexedLookup(provider, brands, this.iconOverride),
-            ];
+            const [provider, modelPart] = effectiveModelId.split("/", 2) as [string, string];
+            return [...indexedLookup(modelPart, brands), ...indexedLookup(provider, brands)];
         } else {
             // Handle Ollama-style names (no provider)
-            return indexedLookup(modelId, brands, this.iconOverride);
+            return indexedLookup(effectiveModelId, brands);
         }
     }
 
@@ -79,11 +97,11 @@ export default class IconService {
             throw new Error(`This should never happen: ${iconName} not found on index`);
         }
         let best: string | null = null;
-        let bestRank = Number.MAX_SAFE_INTEGER;
+        let bestRank = this.preferredIconOrder.length + 10;
         for (const child of brandNode.children) {
             if (child.type !== "file") continue;
             const rank = this.preferredIconOrder.indexOf(child.name);
-            if (rank < bestRank) {
+            if (rank > -1 && rank < bestRank) {
                 best = child.name;
                 bestRank = rank;
             }

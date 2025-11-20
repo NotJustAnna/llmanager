@@ -27,10 +27,7 @@ export default class ModelController {
 
         // Validate provider parameter if provided
         if (provider && provider !== "openrouter" && provider !== "ollama") {
-            return Response.json(
-                { error: 'Invalid provider. Must be "openrouter" or "ollama".' },
-                { status: 400 },
-            );
+            return Response.json({ error: 'Invalid provider. Must be "openrouter" or "ollama".' }, { status: 400 });
         }
 
         // Get models from service

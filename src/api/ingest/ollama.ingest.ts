@@ -75,7 +75,7 @@ export default class OllamaIngest {
             id,
             name: this.normalizedName(model),
             description: await this.normalizedDescription(model, detail),
-            imageUrl: await this.iconService.getIconForModel(model.name),
+            imageUrl: await this.iconService.getIconForModel(model.name, "ollama"),
             promptPrice: "Local",
             completionPrice: "Local",
         };
@@ -120,7 +120,7 @@ export default class OllamaIngest {
         map.set("deepseek-", "");
         map.set("phi", "phi-");
         map.set("-vl", "&#45;VL");
-        map.set('tiny-h', 'Tiny&#45;H');
+        map.set("tiny-h", "Tiny&#45;H");
     });
 
     private sizeIsParamsRegex = /^(?<pre>[a-z])(?<number>\d+(?:\.\d+)+)(?<post>[a-z])$/;
