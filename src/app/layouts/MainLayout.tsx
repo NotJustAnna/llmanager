@@ -162,7 +162,8 @@ export default function MainLayout() {
                         <Button
                             onClick={updateButtonState.onUpdate}
                             disabled={updateButtonState.isLoading}
-                            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                            size="sm"
+                            className="-my-0.5 gap-2 bg-green-600 hover:bg-green-700 text-white"
                         >
                             {updateButtonState.isLoading ? (
                                 <>

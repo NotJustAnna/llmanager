@@ -2,6 +2,8 @@ import { injectable } from "tsyringe";
 import OpenWebUiClient from "@/api/client/openwebui.client.ts";
 import DatabaseService from "@/api/service/database.service.ts";
 import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
+import {log4js} from "@notjustanna/log4js";
+import { formatTokensPerCent } from "@/shared/lib/pricing";
 
 /**
  * OpenWebUI outbound integration for model metadata updates.
@@ -18,6 +20,7 @@ import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
  */
 @injectable()
 export default class OpenWebUiOutbound {
+    private readonly logger = log4js("OpenWebUiOutbound");
     private readonly modelUpdateQueue: Set<string> = new Set();
     private isBackgroundUpdating: boolean = false;
 
@@ -102,12 +105,14 @@ export default class OpenWebUiOutbound {
         let description = dbModel.description;
 
         if (dbModel.id.startsWith("ollama.")) {
-            description += " | Local";
+            description += " (Local)";
         } else if (dbModel.id.startsWith("openrouter.")) {
             if (dbModel.id.endsWith(":free")) {
-                description += " | Free";
+                description += " (Free)";
             } else {
-                description += ` | Input: $${dbModel.promptPrice}/1M tokens | Output: $${dbModel.completionPrice}/1M tokens`;
+                const inputFormatted = formatTokensPerCent(parseFloat(dbModel.promptPrice));
+                const outputFormatted = formatTokensPerCent(parseFloat(dbModel.completionPrice));
+                description += ` (Input: ${inputFormatted} t/¢ | Output: ${outputFormatted} t/¢)`;
             }
         }
 
@@ -123,14 +128,18 @@ export default class OpenWebUiOutbound {
             const modelId = this.modelUpdateQueue.values().next().value;
 
             if (modelId) {
-                this.modelUpdateQueue.delete(modelId);
+                try {
+                    this.modelUpdateQueue.delete(modelId);
 
-                // Fetch the model from the database
-                const dbModel = this.database.getModel(modelId);
-                if (dbModel) {
-                    await this.updateModelMetadata(dbModel);
-                } else {
-                    console.warn(`Queued model "${modelId}" not found in database`);
+                    // Fetch the model from the database
+                    const dbModel = this.database.getModel(modelId);
+                    if (dbModel) {
+                        await this.updateModelMetadata(dbModel);
+                    } else {
+                        console.warn(`Queued model "${modelId}" not found in database`);
+                    }
+                } catch (error) {
+                    this.logger.error(`Error updating model "${modelId}":`, { error });
                 }
             }
 

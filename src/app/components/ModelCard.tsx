@@ -4,6 +4,7 @@ import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { type Model, Pricing } from "@/shared/schema/model.controller";
+import { formatTokensPerCent } from "@/shared/lib/pricing";
 import { AlertCircle, Check } from "lucide-react";
 
 interface ModelCardProps {
@@ -12,30 +13,6 @@ interface ModelCardProps {
     isLoading?: boolean;
     isOpenRouter?: boolean;
     isPending?: boolean;
-}
-
-function formatTokensPerCent(price: number): string {
-    if (price === 0) return "Free";
-
-    const tokensPerCent = 1 / price / 100;
-
-    const units = [
-        { threshold: 1_000_000_000, unit: "B" },
-        { threshold: 1_000_000, unit: "M" },
-        { threshold: 1_000, unit: "K" },
-    ];
-
-    for (const { threshold, unit } of units) {
-        if (tokensPerCent >= threshold) {
-            const value = (tokensPerCent / threshold).toFixed(1);
-            const formatted = value.endsWith(".0") ? value.slice(0, -2) : value;
-            return `${formatted}${unit}`;
-        }
-    }
-
-    const value = tokensPerCent.toFixed(1);
-    const formatted = value.endsWith(".0") ? value.slice(0, -2) : value;
-    return `${formatted}`;
 }
 
 export const ModelCard = memo(function ModelCard({

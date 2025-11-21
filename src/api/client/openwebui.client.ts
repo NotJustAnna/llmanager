@@ -1,5 +1,5 @@
 import { injectable } from "tsyringe";
-import { up } from "up-fetch";
+import {ResponseError, up} from "up-fetch";
 import {
     type CompletionRequest,
     type CompletionResponse,
@@ -65,7 +65,7 @@ export default class OpenWebUiClient {
                 schema: ModelDetailSchema,
             });
         } catch (error) {
-            if (error instanceof Response && error.status === 404) {
+            if (error instanceof ResponseError && (error.status === 404 || error.status === 401)) {
                 return null;
             }
             console.error(`Error fetching model details for "${modelId}":`, error);
@@ -88,7 +88,7 @@ export default class OpenWebUiClient {
             });
             return true;
         } catch (error) {
-            if (error instanceof Response) {
+            if (error instanceof ResponseError) {
                 // 401/404/422/409 indicate the model needs to be created first
                 if (error.status === 401 || error.status === 404 || error.status === 422 || error.status === 409) {
                     return false;
