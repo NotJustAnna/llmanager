@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useUpdateButton } from "../contexts/UpdateButtonContext";
+import { useModels } from "../hooks/useModels";
 import {
     Sidebar,
     SidebarContent,
@@ -12,6 +13,7 @@ import {
     SidebarHeader,
     SidebarInset,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarProvider,
@@ -55,6 +57,11 @@ export default function MainLayout() {
     const location = useLocation();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const { state: updateButtonState } = useUpdateButton();
+    const { models: openRouterModels } = useModels("openrouter");
+    const { models: ollamaModels } = useModels("ollama");
+
+    const openRouterEnabledCount = openRouterModels.filter((m) => m.allowed).length;
+    const ollamaEnabledCount = ollamaModels.filter((m) => m.allowed).length;
 
     const getBreadcrumbLabel = () => {
         switch (location.pathname) {
@@ -118,6 +125,7 @@ export default function MainLayout() {
                                         <Router />
                                         <span>From OpenRouter</span>
                                     </SidebarMenuButton>
+                                    <SidebarMenuBadge className="px-2">{openRouterEnabledCount}</SidebarMenuBadge>
                                 </SidebarMenuItem>
                                 <SidebarMenuItem>
                                     <SidebarMenuButton
@@ -128,6 +136,7 @@ export default function MainLayout() {
                                         <Laptop />
                                         <span>From Ollama</span>
                                     </SidebarMenuButton>
+                                    <SidebarMenuBadge className="px-2">{ollamaEnabledCount}</SidebarMenuBadge>
                                 </SidebarMenuItem>
                             </SidebarMenu>
                         </SidebarGroupContent>
