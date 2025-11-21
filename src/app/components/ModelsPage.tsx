@@ -34,12 +34,13 @@ export function ModelsPage({ source }: ModelsPageProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
     const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">(source === "openrouter" ? "all" : "all");
+    const [sortBy, setSortBy] = useState<"name" | "provider" | "input-cost" | "output-cost" | "combined-cost">("name");
     const [isSaving, setIsSaving] = useState(false);
 
     const currentAllowed = useMemo(() => new Set(models.filter((m) => m.allowed).map((m) => m.id)), [models]);
 
     const filteredModels = useMemo(() => {
-        return models.filter((model) => {
+        const filtered = models.filter((model) => {
             const matchesSearch =
                 model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 model.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,7 +60,38 @@ export function ModelsPage({ source }: ModelsPageProps) {
 
             return matchesSearch && matchesStatus;
         });
-    }, [models, searchQuery, filterStatus, filterFree, source]);
+
+        return filtered.sort((a, b) => {
+            switch (sortBy) {
+                case "name":
+                    return a.name.localeCompare(b.name);
+                case "provider": {
+                    const providerA = a.id.split(".")[0] || "";
+                    const providerB = b.id.split(".")[0] || "";
+                    const providerCompare = providerA.localeCompare(providerB);
+                    if (providerCompare !== 0) return providerCompare;
+                    return a.name.localeCompare(b.name);
+                }
+                case "input-cost": {
+                    const costA = a.pricing.type === "free" ? 0 : a.pricing.prompt;
+                    const costB = b.pricing.type === "free" ? 0 : b.pricing.prompt;
+                    return costA - costB;
+                }
+                case "output-cost": {
+                    const costA = a.pricing.type === "free" ? 0 : a.pricing.completion;
+                    const costB = b.pricing.type === "free" ? 0 : b.pricing.completion;
+                    return costA - costB;
+                }
+                case "combined-cost": {
+                    const costA = a.pricing.type === "free" ? 0 : a.pricing.prompt + a.pricing.completion;
+                    const costB = b.pricing.type === "free" ? 0 : b.pricing.prompt + b.pricing.completion;
+                    return costA - costB;
+                }
+                default:
+                    return 0;
+            }
+        });
+    }, [models, searchQuery, filterStatus, filterFree, source, sortBy]);
 
     const handleAllowAll = () => {
         setModelsAllowed(
@@ -103,7 +135,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
         } else {
             setUpdateButton(null);
         }
-    }, [hasPendingChanges, handleSaveChanges, isSaving]);
+    }, [hasPendingChanges, handleSaveChanges, isSaving, setUpdateButton]);
 
     if (isLoading) {
         return (
@@ -199,6 +231,35 @@ export function ModelsPage({ source }: ModelsPageProps) {
                                     </DropdownMenu>
                                 </>
                             )}
+
+                            <span className="text-muted-foreground">sorted by</span>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="h-8 px-3 text-sm font-medium">
+                                        {sortBy.replace("-", " ")}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="min-w-32">
+                                    <DropdownMenuLabel>Sort Order</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup
+                                        value={sortBy}
+                                        onValueChange={(value) =>
+                                            setSortBy(
+                                                value as "name" | "provider" | "input-cost" | "output-cost" | "combined-cost",
+                                            )
+                                        }
+                                    >
+                                        <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+                                        {source === "openrouter" && (
+                                            <DropdownMenuRadioItem value="provider">Provider</DropdownMenuRadioItem>
+                                        ) }
+                                        <DropdownMenuRadioItem value="input-cost">Input Cost</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="output-cost">Output Cost</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="combined-cost">Combined Cost</DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
                         <DropdownMenu>
