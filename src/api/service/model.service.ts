@@ -169,28 +169,6 @@ export default class ModelService {
             return false;
         }
 
-        // Handle "<auto>" for name
-        if (updates.name === "<auto>") {
-            if (dbModel.id.startsWith("ollama.")) {
-                const modelName = dbModel.id.substring("ollama.".length);
-                updates.name = await this.ollamaIngest.generateAutoName(modelName);
-            } else if (dbModel.id.startsWith("openrouter.")) {
-                const modelId = dbModel.id.substring("openrouter.".length);
-                updates.name = await this.openrouterIngest.generateAutoName(modelId);
-            }
-        }
-
-        // Handle "<auto>" for description
-        if (updates.description === "<auto>") {
-            if (dbModel.id.startsWith("ollama.")) {
-                const modelName = dbModel.id.substring("ollama.".length);
-                updates.description = await this.ollamaIngest.generateAutoDescription(modelName);
-            } else if (dbModel.id.startsWith("openrouter.")) {
-                const modelId = dbModel.id.substring("openrouter.".length);
-                updates.description = await this.openrouterIngest.generateAutoDescription(modelId);
-            }
-        }
-
         // Apply updates to database model
         if (updates.name) {
             dbModel.name = updates.name;
@@ -204,6 +182,36 @@ export default class ModelService {
 
         // Synchronously update OpenWebUI
         return await this.outbound.syncUpdateModel(modelId);
+    }
+
+    /**
+     * Generate a name for a model using AI.
+     */
+    async generateName(modelId: string): Promise<string> {
+        if (modelId.startsWith("ollama.")) {
+            const modelName = modelId.substring("ollama.".length);
+            return await this.ollamaIngest.generateAutoName(modelName);
+        }
+        if (modelId.startsWith("openrouter.")) {
+            const id = modelId.substring("openrouter.".length);
+            return await this.openrouterIngest.generateAutoName(id);
+        }
+        throw new Error(`Unsupported provider for model ID: ${modelId}`);
+    }
+
+    /**
+     * Generate a description for a model using AI.
+     */
+    async generateDescription(modelId: string): Promise<string> {
+        if (modelId.startsWith("ollama.")) {
+            const modelName = modelId.substring("ollama.".length);
+            return await this.ollamaIngest.generateAutoDescription(modelName);
+        }
+        if (modelId.startsWith("openrouter.")) {
+            const id = modelId.substring("openrouter.".length);
+            return await this.openrouterIngest.generateAutoDescription(id);
+        }
+        throw new Error(`Unsupported provider for model ID: ${modelId}`);
     }
 
     private groupIdsByProvider(ids: string[]): {

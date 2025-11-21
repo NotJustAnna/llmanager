@@ -50,3 +50,25 @@ export const EditModelRes = z.object({
     message: z.string(),
 });
 export type EditModelRes = z.infer<typeof EditModelRes>;
+
+// Generate name schemas
+export const GenerateNameReq = z.object({
+    modelId: z.string(),
+});
+export type GenerateNameReq = z.infer<typeof GenerateNameReq>;
+
+export const GenerateNameRes = z.object({
+    name: z.string(),
+});
+export type GenerateNameRes = z.infer<typeof GenerateNameRes>;
+
+// Generate description schemas
+export const GenerateDescriptionReq = z.object({
+    modelId: z.string(),
+});
+export type GenerateDescriptionReq = z.infer<typeof GenerateDescriptionReq>;
+
+export const GenerateDescriptionRes = z.object({
+    description: z.string(),
+});
+export type GenerateDescriptionRes = z.infer<typeof GenerateDescriptionRes>;

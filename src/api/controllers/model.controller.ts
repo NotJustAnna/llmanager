@@ -8,7 +8,7 @@ export default class ModelController {
     constructor(
         private readonly auth: AuthMiddleware,
         private readonly modelService: ModelService,
-    ) {}
+    ) { }
 
     /*
      * Gets all models from all integrated providers.
@@ -89,5 +89,37 @@ export default class ModelController {
 
         // Parse and return response
         return Response.json(ModelSchema.UpdateAllowlistRes.parse(result));
+    }
+
+    /*
+     * Generates a name for a model based on its ID.
+     */
+    async generateName(req: Request): Promise<Response> {
+        if (!this.auth.valid(req)) {
+            return this.auth.reject();
+        }
+
+        const body = await req.json();
+        const parsedBody = ModelSchema.GenerateNameReq.parse(body);
+
+        const name = await this.modelService.generateName(parsedBody.modelId);
+
+        return Response.json(ModelSchema.GenerateNameRes.parse({ name }));
+    }
+
+    /*
+     * Generates a description for a model based on its ID.
+     */
+    async generateDescription(req: Request): Promise<Response> {
+        if (!this.auth.valid(req)) {
+            return this.auth.reject();
+        }
+
+        const body = await req.json();
+        const parsedBody = ModelSchema.GenerateDescriptionReq.parse(body);
+
+        const description = await this.modelService.generateDescription(parsedBody.modelId);
+
+        return Response.json(ModelSchema.GenerateDescriptionRes.parse({ description }));
     }
 }
