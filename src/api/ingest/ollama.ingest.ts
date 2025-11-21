@@ -116,49 +116,99 @@ export default class OllamaIngest {
         return (await this.generativeService.generateDescription(data)) ?? "No description available.";
     }
 
-    private lookup = buildMap<string | RegExp, string>((map) => {
+    private nameLookup = buildMap<string | RegExp, string>((map) => {
         map.set("deepseek-", "");
         map.set("phi", "phi-");
         map.set("-vl", "&#45;VL");
         map.set("tiny-h", "Tiny&#45;H");
     });
 
-    private sizeIsParamsRegex = /^(?<pre>[a-z])(?<number>\d+(?:\.\d+)+)(?<post>[a-z])$/;
+    private sizeLookup = buildMap<string, string>((map) => {
+        // "latest" labels are redundant
+        map.set("latest", "");
+
+        // Lossless/Near-lossless (very high quality)
+        map.set("f32", "HQ");
+        map.set("fp32", "HQ");
+        map.set("f16", "HQ");
+        map.set("fp16", "HQ");
+
+        // High quality (very low quality loss)
+        map.set("q8_0", "HQ");
+        map.set("q6_K", "HQ");
+        map.set("q5_K_M", "HQ");
+        map.set("q5_K", "HQ");
+        map.set("q5_1", "HQ");
+
+        // Medium quality (balanced quality/size)
+        map.set("q5_0", "");
+        map.set("q4_K_M", "");
+        map.set("q4_K", "");
+        map.set("mxfp4", "");
+
+        // Low quality (significant/substantial quality loss)
+        map.set("q5_K_S", "LQ");
+        map.set("q4_K_S", "LQ");
+        map.set("q4_1", "LQ");
+        map.set("q4_0", "LQ");
+        map.set("q3_K_L", "LQ");
+        map.set("q3_K_M", "LQ");
+        map.set("q3_K", "LQ");
+        map.set("q3_K_S", "LQ");
+
+        // Very low quality (extreme quality loss)
+        map.set("q2_K", "LQ");
+    });
+
+    private sizeIsParamsRegex = /(\w)?(\d+(?:\.\d+)+)(\w)?/;
 
     private normalizedName(model: Ollama.Model) {
         let [name, size] = model.name.split(":") as [string, string];
 
-        // Remove size if it's "latest"
-        if (size === "latest") {
-            size = "";
-        }
+        // This should already be lowercase, but just in case
+        name = name.toLowerCase();
+        size = size.toLowerCase();
 
         // Apply lookup replacements
-        for (const [key, value] of this.lookup.entries()) {
+        for (const [key, value] of this.nameLookup.entries()) {
             name = name.replace(key, value);
+        }
+
+        for (const [key, value] of this.sizeLookup.entries()) {
+            size = size.replace(key, value);
+        }
+
+        if (name.startsWith("gemma3")) {
+            // Gemma 3 models use "it" to denote "instruct"
+            size = size.replace("it", "instruct");
+        }
+
+        const match = size.match(this.sizeIsParamsRegex);
+        if (match) {
+            size = match
+                .filter(Boolean)
+                .map((it) => it.toUpperCase())
+                .join("");
         }
 
         // Convert kebab-case to Title Case
         name = name
-            .replace(/-+/, "-")
+            .replace(/-+/, "-") // deduplicate hyphens
+            .replace(/^-+|-+$/, "") // trim leading/trailing hyphens
+            .trim()
             .split("-")
             .map((it) => it.charAt(0).toUpperCase() + it.slice(1))
             .join(" ")
             .replace("&#45;", "-"); // revert hyphen replacement
 
-        const match = size.match(this.sizeIsParamsRegex);
-        if (match?.groups) {
-            size = [match.groups.pre, match.groups.number, match.groups.post]
-                .map((it) => (it as string).toUpperCase())
-                .join("");
-        } else {
-            size = size
-                .replace(/-+/, "-")
-                .split("-")
-                .map((it) => it.charAt(0).toUpperCase() + it.slice(1))
-                .join(" ")
-                .replace("&#45;", "-"); // revert hyphen replacement
-        }
+        size = size
+            .replace(/-+/, "-") // deduplicate hyphens
+            .replace(/^-+|-+$/, "") // trim leading/trailing hyphens
+            .trim()
+            .split("-")
+            .map((it) => it.charAt(0).toUpperCase() + it.slice(1))
+            .join(" ")
+            .replace("&#45;", "-"); // revert hyphen replacement
 
         if (size.length === 0) {
             return name;

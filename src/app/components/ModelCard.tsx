@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { type Model, Pricing } from "@/shared/schema/model.controller";
 import { formatTokensPerCent } from "@/shared/lib/pricing";
-import { AlertCircle, Check } from "lucide-react";
+import {AlertCircle, Check, X} from "lucide-react";
 
 interface ModelCardProps {
     model: Model;
@@ -46,7 +46,18 @@ export const ModelCard = memo(function ModelCard({
                     <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                             <h3 className="font-semibold text-sm md:text-base truncate">{model.name}</h3>
-                            <p className="text-xs text-muted-foreground truncate">{modelId}</p>
+                            <a
+                                href={
+                                    isOpenRouter
+                                        ? `https://openrouter.ai/${modelId}`
+                                        : `https://ollama.com/library/${modelId}`
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-muted-foreground truncate font-mono hover:underline"
+                            >
+                                {modelId}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -56,6 +67,12 @@ export const ModelCard = memo(function ModelCard({
                     <div className="flex flex-wrap gap-2">
                         {isOpenRouter && isFree && <Badge variant="outline">Free</Badge>}
                         {!isOpenRouter && isFree && <Badge variant="outline">Local</Badge>}
+                        {model.id === "openrouter.openrouter/auto" && (
+                            <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Dynamic Pricing
+                            </Badge>
+                        )}
                         {visuallyAllowed && (
                             <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100">
                                 <Check className="h-3 w-3 mr-1" />
@@ -64,7 +81,7 @@ export const ModelCard = memo(function ModelCard({
                         )}
                         {!visuallyAllowed && (
                             <Badge variant="secondary">
-                                <AlertCircle className="h-3 w-3 mr-1" />
+                                <X className="h-3 w-3 mr-1" />
                                 Blocked
                             </Badge>
                         )}
@@ -84,7 +101,7 @@ export const ModelCard = memo(function ModelCard({
                 <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 flex-1">{model.description}</p>
 
                 {/* Pricing info card */}
-                {model.pricing.type === "paid" && (
+                {model.pricing.type === "paid" && model.id !== "openrouter.openrouter/auto" && (
                     <Card className="bg-muted/50 p-2 flex-shrink-0">
                         <div className="text-xs space-y-0.5 text-muted-foreground text-right">
                             <div>
