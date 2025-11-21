@@ -28,7 +28,7 @@ interface ModelsPageProps {
 
 export function ModelsPage({ source }: ModelsPageProps) {
     const { models, isLoading, error, updateAllowlist } = useModels(source);
-    const { hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges } =
+    const { hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges, setModelsAllowed } =
         usePendingChanges();
     const { setUpdateButton } = useUpdateButton();
     const [searchQuery, setSearchQuery] = useState("");
@@ -37,19 +37,6 @@ export function ModelsPage({ source }: ModelsPageProps) {
     const [isSaving, setIsSaving] = useState(false);
 
     const currentAllowed = useMemo(() => new Set(models.filter((m) => m.allowed).map((m) => m.id)), [models]);
-
-    // Update the global update button state based on pending changes
-    useEffect(() => {
-        if (hasPendingChanges) {
-            setUpdateButton({
-                hasPendingChanges: true,
-                isLoading: isSaving,
-                onUpdate: handleSaveChanges,
-            });
-        } else {
-            setUpdateButton(null);
-        }
-    }, [hasPendingChanges, isSaving]);
 
     const filteredModels = useMemo(() => {
         return models.filter((model) => {
@@ -75,19 +62,17 @@ export function ModelsPage({ source }: ModelsPageProps) {
     }, [models, searchQuery, filterStatus, filterFree, source]);
 
     const handleAllowAll = () => {
-        filteredModels.forEach((model) => {
-            if (!model.allowed) {
-                toggleModel(model.id);
-            }
-        });
+        setModelsAllowed(
+            filteredModels.map((m) => ({ id: m.id, originalAllowed: m.allowed })),
+            true,
+        );
     };
 
     const handleDisallowAll = () => {
-        filteredModels.forEach((model) => {
-            if (model.allowed) {
-                toggleModel(model.id);
-            }
-        });
+        setModelsAllowed(
+            filteredModels.map((m) => ({ id: m.id, originalAllowed: m.allowed })),
+            false,
+        );
     };
 
     const handleSaveChanges = useCallback(async () => {
@@ -106,6 +91,19 @@ export function ModelsPage({ source }: ModelsPageProps) {
             setIsSaving(false);
         }
     }, [models, currentAllowed, getPendingAllowlistIds, updateAllowlist, clearPendingChanges]);
+
+    // Update the global update button state based on pending changes
+    useEffect(() => {
+        if (hasPendingChanges) {
+            setUpdateButton({
+                hasPendingChanges: true,
+                isLoading: isSaving,
+                onUpdate: handleSaveChanges,
+            });
+        } else {
+            setUpdateButton(null);
+        }
+    }, [hasPendingChanges, handleSaveChanges, isSaving]);
 
     if (isLoading) {
         return (

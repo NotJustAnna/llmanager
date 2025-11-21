@@ -5,6 +5,7 @@ interface PendingChangesContextType {
     hasPendingChanges: boolean;
     pendingChanges: Set<string>;
     toggleModel: (modelId: string) => void;
+    setModelsAllowed: (updates: { id: string; originalAllowed: boolean }[], targetAllowed: boolean) => void;
     getPendingAllowlistIds: (
         allModels: Array<{ id: string; allowed: boolean }>,
         currentAllowed: Set<string>,
@@ -37,6 +38,22 @@ export function PendingChangesProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
+    const setModelsAllowed = useCallback((updates: { id: string; originalAllowed: boolean }[], targetAllowed: boolean) => {
+        setPendingChanges((prev) => {
+            const newSet = new Set(prev);
+            updates.forEach(({ id, originalAllowed }) => {
+                // If the target state is different from the original state, we need a pending change.
+                // If it's the same, we ensure there is NO pending change.
+                if (targetAllowed !== originalAllowed) {
+                    newSet.add(id);
+                } else {
+                    newSet.delete(id);
+                }
+            });
+            return newSet;
+        });
+    }, []);
+
     const clearPendingChanges = useCallback(() => {
         setPendingChanges(new Set());
     }, []);
@@ -64,6 +81,7 @@ export function PendingChangesProvider({ children }: { children: ReactNode }) {
         hasPendingChanges: pendingChanges.size > 0,
         pendingChanges,
         toggleModel,
+        setModelsAllowed,
         getPendingAllowlistIds,
         clearPendingChanges,
     };
