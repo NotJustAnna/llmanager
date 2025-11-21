@@ -1,11 +1,13 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { type Model, Pricing } from "@/shared/schema/model.controller";
+import { Button } from "./ui/button";
+import type { Model } from "@/shared/schema/model.controller";
 import { formatTokensPerCent } from "@/shared/lib/pricing";
-import { AlertCircle, Check, X } from "lucide-react";
+import { AlertCircle, Check, X, Pencil } from "lucide-react";
+import EditModelSheet from "./EditModelSheet";
 
 interface ModelCardProps {
     model: Model;
@@ -13,6 +15,7 @@ interface ModelCardProps {
     isLoading?: boolean;
     isOpenRouter?: boolean;
     isPending?: boolean;
+    refetch?: () => Promise<void>;
 }
 
 export const ModelCard = memo(function ModelCard({
@@ -21,9 +24,12 @@ export const ModelCard = memo(function ModelCard({
     isLoading = false,
     isOpenRouter = false,
     isPending = false,
+    refetch,
 }: ModelCardProps) {
+    const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
     const isFree = model.pricing.type === "free";
-    const modelId = model.id.split(".")[1] || model.id;
+    const dotIndex = model.id.indexOf(".");
+    const modelId = dotIndex !== -1 ? model.id.substring(dotIndex + 1) : model.id;
 
     // Determine the visual state: if pending, show the opposite of current state
     const visuallyAllowed = isPending ? !model.allowed : model.allowed;
@@ -62,8 +68,17 @@ export const ModelCard = memo(function ModelCard({
                     </div>
                 </div>
 
-                {/* Toggle switch */}
+                {/* Toggle switch and Edit button */}
                 <div className="flex-shrink-0 flex pt-1 items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditSheetOpen(true)}
+                        disabled={isLoading}
+                        className="-my-1"
+                    >
+                        <Pencil className="h-4 w-4" />
+                    </Button>
                     <div className="flex flex-wrap gap-2">
                         {isOpenRouter && isFree && <Badge variant="outline">Free</Badge>}
                         {!isOpenRouter && isFree && <Badge variant="outline">Local</Badge>}
@@ -118,6 +133,8 @@ export const ModelCard = memo(function ModelCard({
                     </Card>
                 )}
             </div>
+
+            <EditModelSheet model={model} open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen} refetch={refetch} />
         </Card>
     );
 });

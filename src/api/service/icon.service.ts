@@ -68,7 +68,7 @@ export default class IconService {
         } else {
             const newIndex = await upfetch(this.indexUrl);
             this._index = newIndex;
-            return newIndex.children.find((it: any) => it.name === "icons" && it.type === "directory") as DirNode;
+            return newIndex.children.find((it: FileNode) => it.name === "icons" && it.type === "directory") as DirNode;
         }
     }
 

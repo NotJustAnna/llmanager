@@ -1,3 +1,6 @@
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: Shadcn UI */
+/** biome-ignore-all assist/source/organizeImports: Shadcn UI */
+/** biome-ignore-all lint/suspicious/noDocumentCookie: Shadcn UI */
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";

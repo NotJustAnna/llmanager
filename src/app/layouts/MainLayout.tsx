@@ -158,7 +158,7 @@ export default function MainLayout() {
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>
-                    {updateButtonState && updateButtonState.hasPendingChanges && (
+                    {updateButtonState?.hasPendingChanges && (
                         <Button
                             onClick={updateButtonState.onUpdate}
                             disabled={updateButtonState.isLoading}

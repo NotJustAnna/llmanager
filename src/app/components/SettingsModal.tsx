@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -58,7 +58,7 @@ export default function SettingsModal({ open, onOpenChange, onLogout }: Settings
             setNewPassword("");
             setConfirmPassword("");
             onOpenChange(false);
-        } catch (error) {
+        } catch (_) {
             toast.error("Failed to change password");
         } finally {
             setIsLoading(false);

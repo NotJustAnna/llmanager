@@ -27,7 +27,7 @@ interface ModelsPageProps {
 }
 
 export function ModelsPage({ source }: ModelsPageProps) {
-    const { models, isLoading, error, updateAllowlist } = useModels(source);
+    const { models, isLoading, error, updateAllowlist, refetch } = useModels(source);
     const {
         hasPendingChanges,
         toggleModel,
@@ -39,7 +39,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
     const { setUpdateButton } = useUpdateButton();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
-    const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">(source === "openrouter" ? "all" : "all");
+    const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">("all");
     const [sortBy, setSortBy] = useState<"name" | "provider" | "input-cost" | "output-cost" | "combined-cost">("name");
     const [isSaving, setIsSaving] = useState(false);
 
@@ -72,8 +72,8 @@ export function ModelsPage({ source }: ModelsPageProps) {
                 case "name":
                     return a.name.localeCompare(b.name);
                 case "provider": {
-                    const providerA = a.id.split(".")[0] || "";
-                    const providerB = b.id.split(".")[0] || "";
+                    const providerA = a.id.split(".", 2)[0] || "";
+                    const providerB = b.id.split(".", 2)[0] || "";
                     const providerCompare = providerA.localeCompare(providerB);
                     if (providerCompare !== 0) return providerCompare;
                     return a.name.localeCompare(b.name);
@@ -314,6 +314,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
                         isSaving={isSaving}
                         isOpenRouter={source === "openrouter"}
                         pendingChanges={pendingChanges}
+                        refetch={refetch}
                     />
                 </div>
             )}
@@ -328,6 +329,7 @@ interface VirtualizedModelsListProps {
     isSaving: boolean;
     isOpenRouter: boolean;
     pendingChanges: Set<string>;
+    refetch?: () => Promise<void>;
 }
 
 function VirtualizedModelsList({
@@ -337,6 +339,7 @@ function VirtualizedModelsList({
     isSaving,
     isOpenRouter,
     pendingChanges,
+    refetch,
 }: VirtualizedModelsListProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -365,6 +368,7 @@ function VirtualizedModelsList({
                     }}
                 >
                     {virtualItems.map((virtualItem) => {
+                        // biome-ignore lint/style/noNonNullAssertion: The models array is guaranteed to have the index since virtualizer count is based on models.length
                         const model = models[virtualItem.index]!;
                         return (
                             <div
@@ -386,6 +390,7 @@ function VirtualizedModelsList({
                                     isLoading={isSaving}
                                     isOpenRouter={isOpenRouter}
                                     isPending={pendingChanges.has(model.id)}
+                                    refetch={refetch}
                                 />
                             </div>
                         );

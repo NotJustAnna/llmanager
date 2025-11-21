@@ -6,16 +6,22 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+function applyCorsHeaders(headers: Headers) {
+    const newHeaders = new Headers(headers);
+    for (const [key, value] of Object.entries(corsHeaders)) {
+        newHeaders.set(key, value);
+    }
+    return newHeaders;
+}
+
 const applyCORS = <V = never>(res: Response | V) =>
     !(res instanceof Response)
         ? res
         : new Response(res.body, {
               status: res.status,
               statusText: res.statusText,
-              headers: {
-                  ...res.headers,
-                  ...corsHeaders,
-              },
+              headers: applyCorsHeaders(res.headers),
           });
 
 export default function CORS(routes: BunRoutes) {

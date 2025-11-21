@@ -19,7 +19,7 @@ export default function Login() {
             await login(password);
             navigate("/");
             toast.success("Logged in successfully");
-        } catch (error) {
+        } catch (_) {
             toast.error("Invalid password");
         } finally {
             setIsLoading(false);

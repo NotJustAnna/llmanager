@@ -8,7 +8,7 @@ export default class ModelController {
     constructor(
         private readonly auth: AuthMiddleware,
         private readonly modelService: ModelService,
-    ) { }
+    ) {}
 
     /*
      * Gets all models from all integrated providers.

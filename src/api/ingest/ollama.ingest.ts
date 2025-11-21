@@ -119,11 +119,12 @@ export default class OllamaIngest {
     private nameLookup = buildMap<string | RegExp, string>((map) => {
         map.set("deepseek-", "");
         map.set("phi", "phi-");
+        map.set(/(qwen[^-]*)vl/, "$1&#45;VL");
         map.set("-vl", "&#45;VL");
         map.set("tiny-h", "Tiny&#45;H");
     });
 
-    private sizeLookup = buildMap<string, string>((map) => {
+    private sizeLookup = buildMap<string | RegExp, string>((map) => {
         // "latest" labels are redundant
         map.set("latest", "");
 
@@ -135,35 +136,38 @@ export default class OllamaIngest {
 
         // High quality (very low quality loss)
         map.set("q8_0", "HQ");
-        map.set("q6_K", "HQ");
-        map.set("q5_K_M", "HQ");
-        map.set("q5_K", "HQ");
+        map.set("q6_k", "HQ");
+        map.set("q5_k_m", "HQ");
+        map.set("q5_k", "HQ");
         map.set("q5_1", "HQ");
 
         // Medium quality (balanced quality/size)
         map.set("q5_0", "");
-        map.set("q4_K_M", "");
-        map.set("q4_K", "");
+        map.set("q4_k_m", "");
+        map.set("q4_k", "");
         map.set("mxfp4", "");
 
         // Low quality (significant/substantial quality loss)
-        map.set("q5_K_S", "LQ");
-        map.set("q4_K_S", "LQ");
+        map.set("q5_k_s", "LQ");
+        map.set("q4_k_s", "LQ");
         map.set("q4_1", "LQ");
         map.set("q4_0", "LQ");
-        map.set("q3_K_L", "LQ");
-        map.set("q3_K_M", "LQ");
-        map.set("q3_K", "LQ");
-        map.set("q3_K_S", "LQ");
+        map.set("q3_k_l", "LQ");
+        map.set("q3_k_m", "LQ");
+        map.set("q3_k", "LQ");
+        map.set("q3_k_s", "LQ");
 
         // Very low quality (extreme quality loss)
-        map.set("q2_K", "LQ");
+        map.set("q2_k", "LQ");
+
+        // Quantization-aware training
+        map.set("qat", "QAT");
     });
 
-    private sizeIsParamsRegex = /(\w)?(\d+(?:\.\d+)+)(\w)?/;
+    private sizeIsParamsRegex = /(\w)?((?:\d+\.)*\d+)(\w)/;
 
     private normalizedName(model: Ollama.Model) {
-        let [name, size] = model.name.split(":") as [string, string];
+        let [name, size] = model.name.split(":", 2) as [string, string];
 
         // This should already be lowercase, but just in case
         name = name.toLowerCase();
@@ -183,13 +187,7 @@ export default class OllamaIngest {
             size = size.replace("it", "instruct");
         }
 
-        const match = size.match(this.sizeIsParamsRegex);
-        if (match) {
-            size = match
-                .filter(Boolean)
-                .map((it) => it.toUpperCase())
-                .join("");
-        }
+        size = size.replace(this.sizeIsParamsRegex, (s) => s.toUpperCase());
 
         // Convert kebab-case to Title Case
         name = name
