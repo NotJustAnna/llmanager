@@ -32,6 +32,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "../components/ui/breadcrumb";
+import icon from '../favicon.svg';
 
 function MobileMenuButton() {
     const { toggleSidebar } = useSidebar();
@@ -78,9 +79,12 @@ export default function MainLayout() {
             <Sidebar>
                 <SidebarHeader className="bg-gradient-to-r from-purple-400 to-purple-700 text-white p-4">
                     <div className="flex items-center justify-between gap-4">
-                        <button type="button" className="flex-1 text-left cursor-pointer" onClick={() => navigate("/")}>
+                        <button type="button" className="flex-1 flex gap-2 items-center text-left cursor-pointer" onClick={() => navigate("/")}>
+                            <img src={icon} alt="LLManager Logo" className="h-8 w-8" />
+                            <div className="flex-1">
                             <h1 className="text-lg md:text-xl font-bold">LLManager</h1>
                             <p className="text-xs md:text-sm text-purple-100">for Open WebUI</p>
+                            </div>
                         </button>
                         <div className="flex gap-2">
                             <MobileMenuButton />
