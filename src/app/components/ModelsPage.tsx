@@ -1,16 +1,16 @@
-import {useState, useMemo, useEffect, useCallback, useRef} from "react";
-import {useVirtualizer} from "@tanstack/react-virtual";
-import {useModels} from "../hooks/useModels";
-import {usePendingChanges} from "../hooks/usePendingChanges";
-import {useUpdateButton} from "../contexts/UpdateButtonContext";
-import {ModelCard} from "./ModelCard";
-import type {Model} from "@/shared/schema/model.controller";
-import {Card} from "./ui/card";
-import {Input} from "./ui/input";
-import {Button} from "./ui/button";
-import {Skeleton} from "./ui/skeleton";
-import {AlertCircle, Check, ChevronDown, Search, X} from "lucide-react";
-import {toast} from "sonner";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useModels } from "../hooks/useModels";
+import { usePendingChanges } from "../hooks/usePendingChanges";
+import { useUpdateButton } from "../contexts/UpdateButtonContext";
+import { ModelCard } from "./ModelCard";
+import type { Model } from "@/shared/schema/model.controller";
+import { Card } from "./ui/card";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
+import { AlertCircle, Check, ChevronDown, Search, X } from "lucide-react";
+import { toast } from "sonner";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,10 +26,11 @@ interface ModelsPageProps {
     source: "openrouter" | "ollama";
 }
 
-export function ModelsPage({source}: ModelsPageProps) {
-    const {models, isLoading, error, updateAllowlist} = useModels(source);
-    const {hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges} = usePendingChanges();
-    const {setUpdateButton} = useUpdateButton();
+export function ModelsPage({ source }: ModelsPageProps) {
+    const { models, isLoading, error, updateAllowlist } = useModels(source);
+    const { hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges } =
+        usePendingChanges();
+    const { setUpdateButton } = useUpdateButton();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
     const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">(source === "openrouter" ? "all" : "all");
@@ -89,15 +90,11 @@ export function ModelsPage({source}: ModelsPageProps) {
         });
     };
 
-    const handleToggleModel = (modelId: string) => {
-        toggleModel(modelId);
-    };
-
     const handleSaveChanges = useCallback(async () => {
         setIsSaving(true);
         try {
             const allowedIds = getPendingAllowlistIds(
-                models.map((m) => ({id: m.id, allowed: m.allowed})),
+                models.map((m) => ({ id: m.id, allowed: m.allowed })),
                 currentAllowed,
             );
             await updateAllowlist(allowedIds);
@@ -113,9 +110,9 @@ export function ModelsPage({source}: ModelsPageProps) {
     if (isLoading) {
         return (
             <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-4">
-                <Skeleton className="h-30 mb-14"/>
+                <Skeleton className="h-30 mb-14" />
                 {[...Array(3)].map((_, i) => (
-                    <Skeleton key={`skelly-${i+1}`} className="h-48"/>
+                    <Skeleton key={`skelly-${i + 1}`} className="h-48" />
                 ))}
             </div>
         );
@@ -126,7 +123,7 @@ export function ModelsPage({source}: ModelsPageProps) {
             <div className="p-4 sm:p-6 max-w-6xl mx-auto">
                 <Card className="p-4 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950">
                     <div className="flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400"/>
+                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                         <div>
                             <h3 className="font-semibold">Error loading models</h3>
                             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -143,7 +140,7 @@ export function ModelsPage({source}: ModelsPageProps) {
                 {/* Search and Filter Card */}
                 <Card className="p-4 mb-6 -space-y-2">
                     <div className="flex items-center gap-2">
-                        <Search className="h-5 w-5 text-muted-foreground"/>
+                        <Search className="h-5 w-5 text-muted-foreground" />
                         <Input
                             placeholder="Search by name, ID, or description..."
                             value={searchQuery}
@@ -164,9 +161,13 @@ export function ModelsPage({source}: ModelsPageProps) {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="min-w-32">
                                     <DropdownMenuLabel>Status</DropdownMenuLabel>
-                                    <DropdownMenuSeparator/>
-                                    <DropdownMenuRadioGroup value={filterStatus}
-                                                            onValueChange={(value) => setFilterStatus(value as "all" | "allowed" | "blocked")}>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuRadioGroup
+                                        value={filterStatus}
+                                        onValueChange={(value) =>
+                                            setFilterStatus(value as "all" | "allowed" | "blocked")
+                                        }
+                                    >
                                         <DropdownMenuRadioItem value="all">All below</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="allowed">Allowed</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="blocked">Blocked</DropdownMenuRadioItem>
@@ -185,9 +186,13 @@ export function ModelsPage({source}: ModelsPageProps) {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent className="min-w-32">
                                             <DropdownMenuLabel>Pricing</DropdownMenuLabel>
-                                            <DropdownMenuSeparator/>
-                                            <DropdownMenuRadioGroup value={filterFree}
-                                                                    onValueChange={(value) => setFilterFree(value as "all" | "free" | "paid")}>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuRadioGroup
+                                                value={filterFree}
+                                                onValueChange={(value) =>
+                                                    setFilterFree(value as "all" | "free" | "paid")
+                                                }
+                                            >
                                                 <DropdownMenuRadioItem value="all">All below</DropdownMenuRadioItem>
                                                 <DropdownMenuRadioItem value="free">Free</DropdownMenuRadioItem>
                                                 <DropdownMenuRadioItem value="paid">Paid</DropdownMenuRadioItem>
@@ -200,8 +205,11 @@ export function ModelsPage({source}: ModelsPageProps) {
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="h-8 px-3 text-sm"
-                                        disabled={filteredModels.length === 0}>
+                                <Button
+                                    variant="outline"
+                                    className="h-8 px-3 text-sm"
+                                    disabled={filteredModels.length === 0}
+                                >
                                     Bulk actions <ChevronDown />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -230,7 +238,7 @@ export function ModelsPage({source}: ModelsPageProps) {
                     <VirtualizedModelsList
                         models={filteredModels}
                         totalModels={models.length}
-                        onToggleModel={handleToggleModel}
+                        onToggleModel={toggleModel}
                         isSaving={isSaving}
                         isOpenRouter={source === "openrouter"}
                         pendingChanges={pendingChanges}
@@ -250,7 +258,14 @@ interface VirtualizedModelsListProps {
     pendingChanges: Set<string>;
 }
 
-function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, isOpenRouter, pendingChanges }: VirtualizedModelsListProps) {
+function VirtualizedModelsList({
+    models,
+    totalModels,
+    onToggleModel,
+    isSaving,
+    isOpenRouter,
+    pendingChanges,
+}: VirtualizedModelsListProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
     const virtualizer = useVirtualizer({
@@ -259,9 +274,7 @@ function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, i
         estimateSize: () => 140, // Estimate card height in pixels
         overscan: 5, // Render 5 items outside visible area for smoother scrolling
         measureElement:
-            typeof window !== "undefined"
-                ? (element) => element?.getBoundingClientRect().height
-                : undefined,
+            typeof window !== "undefined" ? (element) => element?.getBoundingClientRect().height : undefined,
     });
 
     const virtualItems = virtualizer.getVirtualItems();
@@ -271,10 +284,7 @@ function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, i
             <p className="text-sm text-muted-foreground mb-4 flex-shrink-0">
                 Showing {models.length} of {totalModels} models
             </p>
-            <div
-                ref={parentRef}
-                className="flex-1 overflow-y-auto min-h-0"
-            >
+            <div ref={parentRef} className="flex-1 overflow-y-auto min-h-0">
                 <div
                     style={{
                         height: `${virtualizer.getTotalSize()}px`,
@@ -288,7 +298,7 @@ function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, i
                             <div
                                 key={virtualItem.key}
                                 data-index={virtualItem.index}
-                                ref={el => virtualizer.measureElement(el)}
+                                ref={(el) => virtualizer.measureElement(el)}
                                 style={{
                                     position: "absolute",
                                     top: 0,
@@ -300,7 +310,7 @@ function VirtualizedModelsList({ models, totalModels, onToggleModel, isSaving, i
                             >
                                 <ModelCard
                                     model={model}
-                                    onToggle={() => onToggleModel(model.id)}
+                                    onToggle={onToggleModel}
                                     isLoading={isSaving}
                                     isOpenRouter={isOpenRouter}
                                     isPending={pendingChanges.has(model.id)}

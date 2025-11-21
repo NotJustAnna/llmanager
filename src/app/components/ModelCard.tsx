@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { Card } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Badge } from "./ui/badge";
@@ -7,7 +8,7 @@ import { AlertCircle, Check } from "lucide-react";
 
 interface ModelCardProps {
     model: Model;
-    onToggle: () => void;
+    onToggle: (modelId: string) => void;
     isLoading?: boolean;
     isOpenRouter?: boolean;
     isPending?: boolean;
@@ -16,7 +17,7 @@ interface ModelCardProps {
 function formatTokensPerCent(price: number): string {
     if (price === 0) return "Free";
 
-    const tokensPerCent = (1 / price) / 100;
+    const tokensPerCent = 1 / price / 100;
 
     const units = [
         { threshold: 1_000_000_000, unit: "B" },
@@ -37,12 +38,22 @@ function formatTokensPerCent(price: number): string {
     return `${formatted}`;
 }
 
-export function ModelCard({ model, onToggle, isLoading = false, isOpenRouter = false, isPending = false }: ModelCardProps) {
+export const ModelCard = memo(function ModelCard({
+    model,
+    onToggle,
+    isLoading = false,
+    isOpenRouter = false,
+    isPending = false,
+}: ModelCardProps) {
     const isFree = model.pricing.type === "free";
     const modelId = model.id.split(".")[1] || model.id;
 
     // Determine the visual state: if pending, show the opposite of current state
     const visuallyAllowed = isPending ? !model.allowed : model.allowed;
+
+    const handleToggle = useCallback(() => {
+        onToggle(model.id);
+    }, [onToggle, model.id]);
 
     return (
         <Card className="p-4 hover:shadow-lg transition-shadow gap-1">
@@ -87,7 +98,7 @@ export function ModelCard({ model, onToggle, isLoading = false, isOpenRouter = f
                         )}
                     </div>
 
-                    <Switch checked={visuallyAllowed} onCheckedChange={onToggle} disabled={isLoading} />
+                    <Switch checked={visuallyAllowed} onCheckedChange={handleToggle} disabled={isLoading} />
                 </div>
             </div>
 
@@ -115,4 +126,4 @@ export function ModelCard({ model, onToggle, isLoading = false, isOpenRouter = f
             </div>
         </Card>
     );
-}
+});

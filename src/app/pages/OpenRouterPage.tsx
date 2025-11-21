@@ -4,7 +4,7 @@ import { PendingChangesProvider } from "../hooks/usePendingChanges";
 export default function OpenRouterPage() {
     return (
         <PendingChangesProvider>
-            <ModelsPage source="openrouter"  />
+            <ModelsPage source="openrouter" />
         </PendingChangesProvider>
     );
 }
