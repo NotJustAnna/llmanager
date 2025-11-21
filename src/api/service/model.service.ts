@@ -252,7 +252,7 @@ export default class ModelService {
             OLLAMA_API_CONFIGS: {
                 "0": {
                     enable: true,
-                    tags: [],
+                    tags: [{ name: "Ollama" }],
                     prefix_id: "ollama",
                     model_ids: modelIds,
                     connection_type: "local",

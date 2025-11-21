@@ -1,5 +1,5 @@
 import { injectable } from "tsyringe";
-import {ResponseError, up} from "up-fetch";
+import { ResponseError, up } from "up-fetch";
 import {
     type CompletionRequest,
     type CompletionResponse,

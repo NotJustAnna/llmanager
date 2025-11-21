@@ -2,7 +2,7 @@ import { injectable } from "tsyringe";
 import OpenWebUiClient from "@/api/client/openwebui.client.ts";
 import DatabaseService from "@/api/service/database.service.ts";
 import { Model as DatabaseModel } from "@/api/schema/model.database.ts";
-import {log4js} from "@notjustanna/log4js";
+import { log4js } from "@notjustanna/log4js";
 import { formatTokensPerCent } from "@/shared/lib/pricing";
 
 /**

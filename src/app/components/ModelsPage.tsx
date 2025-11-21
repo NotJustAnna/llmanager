@@ -28,8 +28,14 @@ interface ModelsPageProps {
 
 export function ModelsPage({ source }: ModelsPageProps) {
     const { models, isLoading, error, updateAllowlist } = useModels(source);
-    const { hasPendingChanges, toggleModel, getPendingAllowlistIds, clearPendingChanges, pendingChanges, setModelsAllowed } =
-        usePendingChanges();
+    const {
+        hasPendingChanges,
+        toggleModel,
+        getPendingAllowlistIds,
+        clearPendingChanges,
+        pendingChanges,
+        setModelsAllowed,
+    } = usePendingChanges();
     const { setUpdateButton } = useUpdateButton();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
@@ -246,17 +252,24 @@ export function ModelsPage({ source }: ModelsPageProps) {
                                         value={sortBy}
                                         onValueChange={(value) =>
                                             setSortBy(
-                                                value as "name" | "provider" | "input-cost" | "output-cost" | "combined-cost",
+                                                value as
+                                                    | "name"
+                                                    | "provider"
+                                                    | "input-cost"
+                                                    | "output-cost"
+                                                    | "combined-cost",
                                             )
                                         }
                                     >
                                         <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
                                         {source === "openrouter" && (
                                             <DropdownMenuRadioItem value="provider">Provider</DropdownMenuRadioItem>
-                                        ) }
+                                        )}
                                         <DropdownMenuRadioItem value="input-cost">Input Cost</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="output-cost">Output Cost</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="combined-cost">Combined Cost</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="combined-cost">
+                                            Combined Cost
+                                        </DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>

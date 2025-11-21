@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { type Model, Pricing } from "@/shared/schema/model.controller";
 import { formatTokensPerCent } from "@/shared/lib/pricing";
-import {AlertCircle, Check, X} from "lucide-react";
+import { AlertCircle, Check, X } from "lucide-react";
 
 interface ModelCardProps {
     model: Model;
