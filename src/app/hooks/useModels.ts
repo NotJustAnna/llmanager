@@ -40,14 +40,26 @@ export function useModels(source: "openrouter" | "ollama") {
     const updateAllowlist = useCallback(
         async (whitelistIds: string[]) => {
             try {
-                const response = await fetch("/api/models/allowlist", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({ whitelistIds }),
-                });
+                let response: Response;
+
+                // If whitelistIds is empty, call the clear endpoint instead
+                if (whitelistIds.length === 0) {
+                    response = await fetch(`/api/models/allowlist/clear?provider=${source}`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+                } else {
+                    response = await fetch("/api/models/allowlist", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({ whitelistIds }),
+                    });
+                }
 
                 if (!response.ok) {
                     throw new Error("Failed to update allowlist");
@@ -60,7 +72,7 @@ export function useModels(source: "openrouter" | "ollama") {
                 throw err;
             }
         },
-        [accessToken, fetchModels],
+        [accessToken, fetchModels, source],
     );
 
     return {

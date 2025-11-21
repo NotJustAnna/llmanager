@@ -157,6 +157,36 @@ export default class ModelService {
     }
 
     /**
+     * Clear the allowlist for a specific provider.
+     * Disables the provider in OpenWebUI and removes all models from the allowlist.
+     */
+    async clearAllowlist(provider: "openrouter" | "ollama"): Promise<ControllerSchema.UpdateAllowlistRes> {
+        if (provider === "openrouter") {
+            const openAiConfig = this.buildOpenAiConfig([]);
+            await this.openwebui.updateOpenAiConfig(openAiConfig);
+            this.setProviderAllowlist("openrouter", []);
+
+            return {
+                success: true,
+                modelCount: { openrouter: 0, ollama: 0, invalid: 0 },
+                message: "OpenRouter allowlist cleared",
+            };
+        } else if (provider === "ollama") {
+            const ollamaConfig = this.buildOllamaConfig([]);
+            await this.openwebui.updateOllamaConfig(ollamaConfig);
+            this.setProviderAllowlist("ollama", []);
+
+            return {
+                success: true,
+                modelCount: { openrouter: 0, ollama: 0, invalid: 0 },
+                message: "Ollama allowlist cleared",
+            };
+        }
+
+        throw new Error(`Invalid provider: ${provider}`);
+    }
+
+    /**
      * Edit a model's metadata (name and description).
      * Supports "<auto>" values to auto-generate name and description based on provider rules.
      * Queries the provider APIs for fresh, up-to-date information.
@@ -236,6 +266,13 @@ export default class ModelService {
     }
 
     private buildOpenAiConfig(modelIds: string[]): OpenAiConfigRequest {
+        if (modelIds.length === 0) {
+            // Funnily enough, if no models are provided,
+            // Open WebUI allows *all* models instead of none.
+            // To disable all models, we provide a fake invalid model ID.
+            modelIds.push("<none>");
+        }
+
         return {
             ENABLE_OPENAI_API: true,
             OPENAI_API_BASE_URLS: [process.env.OPENROUTER_API_URL ?? "https://openrouter.ai/api/v1"],
@@ -254,6 +291,13 @@ export default class ModelService {
     }
 
     private buildOllamaConfig(modelIds: string[]): OllamaConfigRequest {
+        if (modelIds.length === 0) {
+            // Funnily enough, if no models are provided,
+            // Open WebUI allows *all* models instead of none.
+            // To disable all models, we provide a fake invalid model ID.
+            modelIds.push("<none>");
+        }
+
         return {
             ENABLE_OLLAMA_API: true,
             OLLAMA_BASE_URLS: [process.env.OLLAMA_API_URL ?? "http://localhost:11434"],

@@ -92,6 +92,36 @@ export default class ModelController {
     }
 
     /*
+     * Clears the allowlist for a specific provider.
+     *
+     * query parameters:
+     *   - provider: "openrouter" | "ollama" (required)
+     */
+    async clearAllowlist(req: Request): Promise<Response> {
+        if (!this.auth.valid(req)) {
+            return this.auth.reject();
+        }
+
+        // Extract provider from query parameters
+        const url = new URL(req.url);
+        const provider = url.searchParams.get("provider");
+
+        // Validate provider parameter
+        if (!provider || (provider !== "openrouter" && provider !== "ollama")) {
+            return Response.json(
+                { error: 'Missing or invalid provider. Must be "openrouter" or "ollama".' },
+                { status: 400 },
+            );
+        }
+
+        // Clear allowlist via service
+        const result = await this.modelService.clearAllowlist(provider as "openrouter" | "ollama");
+
+        // Parse and return response
+        return Response.json(ModelSchema.UpdateAllowlistRes.parse(result));
+    }
+
+    /*
      * Generates a name for a model based on its ID.
      */
     async generateName(req: Request): Promise<Response> {

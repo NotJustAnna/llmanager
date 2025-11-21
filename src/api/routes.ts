@@ -12,6 +12,7 @@ export const routes = Routes(({ GET, POST, PUT }, routes) => {
     GET("/api/models", (req) => Model.listModels(req));
     PUT("/api/models/edit", (req) => Model.editModel(req));
     POST("/api/models/allowlist", (req) => Model.updateAllowlist(req));
+    POST("/api/models/allowlist/clear", (req) => Model.clearAllowlist(req));
     POST("/api/models/generate/name", (req) => Model.generateName(req));
     POST("/api/models/generate/description", (req) => Model.generateDescription(req));
 
