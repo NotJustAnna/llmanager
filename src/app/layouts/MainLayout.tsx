@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useUpdateButton } from "../contexts/UpdateButtonContext";
 import { useModels } from "../hooks/useModels";
+import { useOpenRouterCredits } from "../hooks/useOpenRouterCredits";
 import {
     Sidebar,
     SidebarContent,
@@ -34,6 +35,8 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "../components/ui/breadcrumb";
+import { Badge } from "../components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../components/ui/tooltip";
 import icon from "../favicon.svg";
 
 function MobileMenuButton() {
@@ -59,6 +62,7 @@ export default function MainLayout() {
     const { state: updateButtonState } = useUpdateButton();
     const { models: openRouterModels } = useModels("openrouter");
     const { models: ollamaModels } = useModels("ollama");
+    const { data: openRouterCredits } = useOpenRouterCredits();
 
     const openRouterEnabledCount = openRouterModels.filter((m) => m.allowed).length;
     const ollamaEnabledCount = ollamaModels.filter((m) => m.allowed).length;
@@ -174,6 +178,25 @@ export default function MainLayout() {
                                 )}
                             </BreadcrumbList>
                         </Breadcrumb>
+
+                        {openRouterCredits && location.pathname === "/from-openrouter" && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <a href="https://openrouter.ai/settings/credits" target="_blank" rel="noopener noreferrer">
+                                        <Badge variant="secondary" className="cursor-help">
+                                            ${(openRouterCredits.credits - openRouterCredits.usage).toFixed(2)} remaining
+                                        </Badge>
+                                    </a>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="w-fit max-w-xs">
+                                    <div className="space-y-1 text-xs">
+                                        <div className="font-semibold">OpenRouter Credits</div>
+                                        <div>${openRouterCredits.credits.toFixed(2)} (added)</div>
+                                        <div className="text-muted-foreground">${openRouterCredits.usage.toFixed(2)} (spent)</div>
+                                    </div>
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
                     </div>
                     {updateButtonState?.hasPendingChanges && (
                         <Button
