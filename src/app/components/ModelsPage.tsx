@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useModels } from "../hooks/useModels";
 import { usePendingChanges } from "../hooks/usePendingChanges";
 import { useUpdateButton } from "../contexts/UpdateButtonContext";
+import { useSettings } from "../hooks/useSettings";
 import { ModelCard } from "./ModelCard";
 import type { Model } from "@/shared/schema/model.controller";
 import { Card } from "./ui/card";
@@ -37,6 +38,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
         setModelsAllowed,
     } = usePendingChanges();
     const { setUpdateButton } = useUpdateButton();
+    const { settings } = useSettings();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
     const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">("all");
@@ -47,9 +49,11 @@ export function ModelsPage({ source }: ModelsPageProps) {
 
     const filteredModels = useMemo(() => {
         const filtered = models.filter((model) => {
+            const dotIndex = model.id.indexOf(".");
+            const modelId = dotIndex !== -1 ? model.id.substring(dotIndex + 1) : model.id;
             const matchesSearch =
                 model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                model.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                modelId.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 model.description.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus =
@@ -107,10 +111,11 @@ export function ModelsPage({ source }: ModelsPageProps) {
     };
 
     const handleDisallowAll = () => {
-        setModelsAllowed(
-            filteredModels.map((m) => ({ id: m.id, originalAllowed: m.allowed })),
-            false,
-        );
+        // Don't disallow the generative model
+        const modelsToDisallow = filteredModels
+            .filter((m) => m.id !== settings?.generativeModel)
+            .map((m) => ({ id: m.id, originalAllowed: m.allowed }));
+        setModelsAllowed(modelsToDisallow, false);
     };
 
     const handleSaveChanges = useCallback(async () => {
@@ -185,8 +190,8 @@ export function ModelsPage({ source }: ModelsPageProps) {
                         />
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between space-x-2">
-                        <div className="flex items-center gap-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-2 justify-between space-x-2">
+                        {/*<div className="flex items-center gap-2 text-sm">*/}
                             <span className="text-muted-foreground">Models which are</span>
 
                             <DropdownMenu>
@@ -273,27 +278,29 @@ export function ModelsPage({ source }: ModelsPageProps) {
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </div>
+                        {/*</div>*/}
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="h-8 px-3 text-sm"
-                                    disabled={filteredModels.length === 0}
-                                >
-                                    Bulk actions <ChevronDown />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={handleAllowAll}>
-                                    <Check /> Allow all models
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDisallowAll}>
-                                    <X /> Disallow all models
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex-1 flex justify-end">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-8 px-3 text-sm"
+                                        disabled={filteredModels.length === 0}
+                                    >
+                                        Bulk actions <ChevronDown />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem onClick={handleAllowAll}>
+                                        <Check /> Allow all models
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDisallowAll}>
+                                        <X /> Disallow all models
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </Card>
             </div>
@@ -315,6 +322,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
                         isOpenRouter={source === "openrouter"}
                         pendingChanges={pendingChanges}
                         refetch={refetch}
+                        generativeModelId={settings?.generativeModel ?? undefined}
                     />
                 </div>
             )}
@@ -330,6 +338,7 @@ interface VirtualizedModelsListProps {
     isOpenRouter: boolean;
     pendingChanges: Set<string>;
     refetch?: () => Promise<void>;
+    generativeModelId?: string;
 }
 
 function VirtualizedModelsList({
@@ -340,6 +349,7 @@ function VirtualizedModelsList({
     isOpenRouter,
     pendingChanges,
     refetch,
+    generativeModelId,
 }: VirtualizedModelsListProps) {
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -391,6 +401,7 @@ function VirtualizedModelsList({
                                     isOpenRouter={isOpenRouter}
                                     isPending={pendingChanges.has(model.id)}
                                     refetch={refetch}
+                                    isGenerativeModel={model.id === generativeModelId}
                                 />
                             </div>
                         );
