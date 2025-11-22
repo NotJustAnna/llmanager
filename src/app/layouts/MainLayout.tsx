@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { useUpdateButton } from "../contexts/UpdateButtonContext";
-import { useModels } from "../hooks/useModels";
+import { useModelsContext } from "../contexts/ModelContext";
 import { useOpenRouterCredits } from "../hooks/useOpenRouterCredits";
 import {
     Sidebar,
@@ -60,8 +60,7 @@ export default function MainLayout() {
     const location = useLocation();
     const [settingsOpen, setSettingsOpen] = useState(false);
     const { state: updateButtonState } = useUpdateButton();
-    const { models: openRouterModels } = useModels("openrouter");
-    const { models: ollamaModels } = useModels("ollama");
+    const { openRouterModels, ollamaModels } = useModelsContext();
     const { data: openRouterCredits } = useOpenRouterCredits();
 
     const openRouterEnabledCount = openRouterModels.filter((m) => m.allowed).length;

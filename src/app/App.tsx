@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./providers/AuthProvider";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { UpdateButtonProvider } from "./contexts/UpdateButtonContext";
+import { ModelProvider } from "./contexts/ModelContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -15,7 +16,8 @@ export default function App() {
         <ThemeProvider>
             <AuthProvider>
                 <UpdateButtonProvider>
-                    <BrowserRouter>
+                    <ModelProvider>
+                        <BrowserRouter>
                         <Routes>
                             <Route path="/login" element={<Login />} />
                             <Route
@@ -31,8 +33,9 @@ export default function App() {
                             </Route>
                             <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
-                    </BrowserRouter>
-                    <Toaster />
+                        </BrowserRouter>
+                        <Toaster />
+                    </ModelProvider>
                 </UpdateButtonProvider>
             </AuthProvider>
         </ThemeProvider>

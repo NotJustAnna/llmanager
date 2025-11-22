@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useModels } from "../hooks/useModels";
+import { useModelsContext } from "../contexts/ModelContext";
 import { usePendingChanges } from "../hooks/usePendingChanges";
 import { useUpdateButton } from "../contexts/UpdateButtonContext";
 import { useSettings } from "../hooks/useSettings";
@@ -28,7 +28,8 @@ interface ModelsPageProps {
 }
 
 export function ModelsPage({ source }: ModelsPageProps) {
-    const { models, isLoading, error, updateAllowlist, refetch } = useModels(source);
+    const { openRouterModels, ollamaModels, isLoading, error, refetch, updateAllowlist } = useModelsContext();
+    const models = source === "openrouter" ? openRouterModels : ollamaModels;
     const {
         hasPendingChanges,
         toggleModel,
@@ -125,7 +126,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
                 models.map((m) => ({ id: m.id, allowed: m.allowed })),
                 currentAllowed,
             );
-            await updateAllowlist(allowedIds);
+            await updateAllowlist(source, allowedIds);
             clearPendingChanges();
             toast.success("Changes saved successfully");
         } catch {
@@ -133,7 +134,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
         } finally {
             setIsSaving(false);
         }
-    }, [models, currentAllowed, getPendingAllowlistIds, updateAllowlist, clearPendingChanges]);
+    }, [models, currentAllowed, getPendingAllowlistIds, updateAllowlist, clearPendingChanges, source]);
 
     // Update the global update button state based on pending changes
     useEffect(() => {

@@ -117,11 +117,12 @@ export default class OllamaIngest {
     }
 
     private nameLookup = buildMap<string | RegExp, string>((map) => {
-        map.set("deepseek-", "");
+        map.set("deepseek-r1", "r1");
         map.set("phi", "phi-");
         map.set(/(qwen[^-]*)vl/, "$1&#45;VL");
         map.set("-vl", "&#45;VL");
         map.set("tiny-h", "Tiny&#45;H");
+        map.set("ocr", "OCR");
     });
 
     private sizeLookup = buildMap<string | RegExp, string>((map) => {
@@ -129,33 +130,16 @@ export default class OllamaIngest {
         map.set("latest", "");
 
         // Lossless/Near-lossless (very high quality)
-        map.set("f32", "HQ");
-        map.set("fp32", "HQ");
-        map.set("f16", "HQ");
-        map.set("fp16", "HQ");
+        for (const k of ["f32", "fp32", "f16", "fp16"]) map.set(k, "HQ");
 
         // High quality (very low quality loss)
-        map.set("q8_0", "HQ");
-        map.set("q6_k", "HQ");
-        map.set("q5_k_m", "HQ");
-        map.set("q5_k", "HQ");
-        map.set("q5_1", "HQ");
+        for (const k of ["q8_0", "q6_k", "q5_k_m", "q5_k", "q5_1"]) map.set(k, "HQ");
 
         // Medium quality (balanced quality/size)
-        map.set("q5_0", "");
-        map.set("q4_k_m", "");
-        map.set("q4_k", "");
-        map.set("mxfp4", "");
+        for (const k of ["q5_0", "q4_k_m", "q4_k", "mxfp4"]) map.set(k, "");
 
         // Low quality (significant/substantial quality loss)
-        map.set("q5_k_s", "LQ");
-        map.set("q4_k_s", "LQ");
-        map.set("q4_1", "LQ");
-        map.set("q4_0", "LQ");
-        map.set("q3_k_l", "LQ");
-        map.set("q3_k_m", "LQ");
-        map.set("q3_k", "LQ");
-        map.set("q3_k_s", "LQ");
+        for (const k of ["q5_k_s", "q4_k_s", "q4_1", "q4_0", "q3_k_l", "q3_k_m", "q3_k", "q3_k_s"]) map.set(k, "LQ");
 
         // Very low quality (extreme quality loss)
         map.set("q2_k", "LQ");
@@ -177,7 +161,6 @@ export default class OllamaIngest {
         for (const [key, value] of this.nameLookup.entries()) {
             name = name.replace(key, value);
         }
-
         for (const [key, value] of this.sizeLookup.entries()) {
             size = size.replace(key, value);
         }
@@ -187,30 +170,25 @@ export default class OllamaIngest {
             size = size.replace("it", "instruct");
         }
 
-        size = size.replace(this.sizeIsParamsRegex, (s) => s.toUpperCase());
-
-        // Convert kebab-case to Title Case
         name = name
             .replace(/-+/, "-") // deduplicate hyphens
             .replace(/^-+|-+$/, "") // trim leading/trailing hyphens
             .trim()
-            .split("-")
-            .map((it) => it.charAt(0).toUpperCase() + it.slice(1))
-            .join(" ")
+            .split("-") // split on hyphens
+            .map((it) => it.charAt(0).toUpperCase() + it.slice(1)) // capitalize each word
+            .join(" ") // join with spaces
             .replace("&#45;", "-"); // revert hyphen replacement
 
         size = size
+            .replace(this.sizeIsParamsRegex, (s) => s.toUpperCase())
             .replace(/-+/, "-") // deduplicate hyphens
             .replace(/^-+|-+$/, "") // trim leading/trailing hyphens
             .trim()
-            .split("-")
-            .map((it) => it.charAt(0).toUpperCase() + it.slice(1))
-            .join(" ")
+            .split("-") // split on hyphens
+            .map((it) => it.charAt(0).toUpperCase() + it.slice(1)) // capitalize each word
+            .join(" ") // join with spaces
             .replace("&#45;", "-"); // revert hyphen replacement
 
-        if (size.length === 0) {
-            return name;
-        }
-        return [name, size].join(" ");
+        return size.length === 0 ? name : [name, size].join(" ");
     }
 }
