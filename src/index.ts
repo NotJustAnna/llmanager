@@ -1,3 +1,4 @@
+import 'core-js';
 import { log4js } from "@notjustanna/log4js";
 import { serve } from "bun";
 import { routes } from "@/api/routes.ts";

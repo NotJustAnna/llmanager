@@ -5,7 +5,7 @@
  * It is included in `src/index.html`.
  */
 
-import { StrictMode } from "react";
+// import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
@@ -15,9 +15,9 @@ if (!elem) {
 }
 
 const app = (
-    <StrictMode>
+    // <StrictMode>
         <App />
-    </StrictMode>
+    // </StrictMode>
 );
 
 if (import.meta.hot) {
