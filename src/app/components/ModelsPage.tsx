@@ -178,9 +178,9 @@ export function ModelsPage({ source }: ModelsPageProps) {
 
     return (
         <div className="flex flex-col h-full">
-            <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex-shrink-0">
+            <div className="p-4 pb-2 sm:p-6 sm:pb-2 max-w-6xl mx-auto w-full flex-shrink-0">
                 {/* Search and Filter Card */}
-                <Card className="p-4 mb-6 -space-y-2">
+                <Card className="p-4 -space-y-2">
                     <div className="flex items-center gap-2">
                         <Search className="h-5 w-5 text-muted-foreground" />
                         <Input
@@ -308,13 +308,13 @@ export function ModelsPage({ source }: ModelsPageProps) {
 
             {/* Models Grid - Takes up remaining space */}
             {filteredModels.length === 0 ? (
-                <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full">
+                <div className="p-4 pt-2 sm:p-6 sm:pt-2 max-w-6xl mx-auto w-full">
                     <Card className="p-8 text-center">
                         <p className="text-muted-foreground">No models found</p>
                     </Card>
                 </div>
             ) : (
-                <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col">
+                <div className="p-4 pt-2 sm:p-6 sm:pt-2 max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col">
                     <VirtualizedModelsList
                         models={filteredModels}
                         totalModels={models.length}
