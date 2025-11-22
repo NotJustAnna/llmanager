@@ -1,18 +1,12 @@
 import * as z from "zod";
 
-export const FormatSchema = z.enum(["gguf"]);
-export type Format = z.infer<typeof FormatSchema>;
-
-export const QuantizationLevelSchema = z.enum(["Q4_0", "Q4_K_M", "Q8_0"]);
-export type QuantizationLevel = z.infer<typeof QuantizationLevelSchema>;
-
 export const DetailsSchema = z.object({
     parent_model: z.string(),
-    format: FormatSchema,
+    format: z.string(),
     family: z.string(),
     families: z.array(z.string()),
     parameter_size: z.string(),
-    quantization_level: QuantizationLevelSchema,
+    quantization_level: z.string(),
 });
 export type Details = z.infer<typeof DetailsSchema>;
 
@@ -31,29 +25,17 @@ export const ModelsResponseSchema = z.object({
 });
 export type ModelsResponse = z.infer<typeof ModelsResponseSchema>;
 
-export const CapabilitySchema = z.enum(["completion", "thinking", "tools", "vision"]);
-export type Capability = z.infer<typeof CapabilitySchema>;
-
-export const TokenizerGgmlModelSchema = z.enum(["gpt2", "llama"]);
-export type TokenizerGgmlModel = z.infer<typeof TokenizerGgmlModelSchema>;
-
-export const TokenizerGgmlPreSchema = z.enum(["dbrx", "default", "gpt-4o", "qwen2"]);
-export type TokenizerGgmlPre = z.infer<typeof TokenizerGgmlPreSchema>;
-
-export const TypeSchema = z.enum(["F16", "F32", "Q4_0", "Q4_K", "Q5_0", "Q5_K", "Q6_K", "Q8_0"]);
-export type Type = z.infer<typeof TypeSchema>;
-
 export const DetailsClassSchema = z.object({
     parent_model: z.string(),
-    format: FormatSchema,
+    format: z.string(),
     family: z.string(),
     families: z.array(z.string()),
     parameter_size: z.string(),
-    quantization_level: QuantizationLevelSchema,
+    quantization_level: z.string(),
 });
 export type DetailsClass = z.infer<typeof DetailsClassSchema>;
 
-export const ModelInfoSchema = z.object({
+export const ModelInfoSchema = z.looseObject({
     "general.architecture": z.string(),
     "general.basename": z.string().optional(),
     "general.file_type": z.number(),
@@ -82,9 +64,9 @@ export const ModelInfoSchema = z.object({
     "tokenizer.ggml.add_eos_token": z.boolean().optional(),
     "tokenizer.ggml.bos_token_id": z.number().optional(),
     "tokenizer.ggml.eos_token_id": z.number(),
-    "tokenizer.ggml.model": TokenizerGgmlModelSchema,
+    "tokenizer.ggml.model": z.string(),
     "tokenizer.ggml.padding_token_id": z.number().optional(),
-    "tokenizer.ggml.pre": TokenizerGgmlPreSchema.optional(),
+    "tokenizer.ggml.pre": z.string().optional(),
     "tokenizer.ggml.scores": z.null().optional(),
     "tokenizer.ggml.token_type": z.null(),
     "tokenizer.ggml.tokens": z.null(),
@@ -238,7 +220,7 @@ export const ModelInfoSchema = z.object({
 });
 export type ModelInfo = z.infer<typeof ModelInfoSchema>;
 
-export const ProjectorInfoSchema = z.object({
+export const ProjectorInfoSchema = z.looseObject({
     "clip.has_llava_projector": z.boolean(),
     "clip.has_text_encoder": z.boolean(),
     "clip.has_vision_encoder": z.boolean(),
@@ -264,7 +246,7 @@ export type ProjectorInfo = z.infer<typeof ProjectorInfoSchema>;
 
 export const TensorSchema = z.object({
     name: z.string(),
-    type: TypeSchema,
+    type: z.string(),
     shape: z.array(z.number()),
 });
 export type Tensor = z.infer<typeof TensorSchema>;
@@ -277,7 +259,7 @@ export const ModelDetailsResponse = z.object({
     details: DetailsClassSchema,
     model_info: ModelInfoSchema,
     tensors: z.array(TensorSchema),
-    capabilities: z.array(CapabilitySchema),
+    capabilities: z.array(z.string()),
     modified_at: z.coerce.date(),
     projector_info: ProjectorInfoSchema.optional(),
     system: z.string().optional(),
