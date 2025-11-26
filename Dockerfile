@@ -14,10 +14,13 @@ COPY . .
 # Build executable using existing build script
 RUN bun run build
 
-# Runtime stage - minimal
-FROM gcr.io/distroless/cc-debian12
+# Runtime stage - Alpine (same libc as builder)
+FROM alpine:3.20
 
 WORKDIR /app
+
+# Add runtime dependencies for Bun binary
+RUN apk add --no-cache libstdc++ libgcc
 
 COPY --from=builder /app/llmanager /app/llmanager
 
