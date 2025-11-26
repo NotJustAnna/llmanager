@@ -34,31 +34,6 @@ export const TokenizerSchema = z.enum([
 ]);
 export type Tokenizer = z.infer<typeof TokenizerSchema>;
 
-export const SupportedParameterSchema = z.enum([
-    "frequency_penalty",
-    "include_reasoning",
-    "logit_bias",
-    "logprobs",
-    "max_tokens",
-    "min_p",
-    "presence_penalty",
-    "reasoning",
-    "repetition_penalty",
-    "response_format",
-    "seed",
-    "stop",
-    "structured_outputs",
-    "temperature",
-    "tool_choice",
-    "tools",
-    "top_a",
-    "top_k",
-    "top_logprobs",
-    "top_p",
-    "web_search_options",
-]);
-export type SupportedParameter = z.infer<typeof SupportedParameterSchema>;
-
 export const ArchitectureSchema = z.object({
     modality: ModalitySchema,
     input_modalities: z.array(PutModalitySchema),
@@ -107,7 +82,7 @@ export const ModelSchema = z.object({
     pricing: PricingSchema,
     top_provider: TopProviderSchema,
     per_request_limits: z.null(),
-    supported_parameters: z.array(SupportedParameterSchema),
+    supported_parameters: z.array(z.string()),
     default_parameters: z.union([DefaultParametersSchema, z.null()]),
 });
 export type Model = z.infer<typeof ModelSchema>;
