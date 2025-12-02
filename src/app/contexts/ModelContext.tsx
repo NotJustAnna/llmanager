@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { Model } from "@/shared/schema/model.controller";
 import { useAuth } from "../hooks/useAuth";
 
