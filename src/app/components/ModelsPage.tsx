@@ -100,12 +100,14 @@ export function ModelsPage({ source }: ModelsPageProps) {
                 }
                 case "newest": {
                     // Sort by newest first (descending)
+                    // Models without dates are treated as epoch (Jan 1, 1970) and appear at the end
                     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                     return dateB - dateA;
                 }
                 case "oldest": {
                     // Sort by oldest first (ascending)
+                    // Models without dates are treated as far future and appear at the end
                     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
                     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
                     return dateA - dateB;

@@ -29,19 +29,23 @@ export function formatModelAge(createdAt: Date | string | undefined): string | n
         return `${diffDays} days old`;
     }
 
-    const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths === 1) {
+    // Calculate actual month difference
+    const yearsDiff = now.getFullYear() - date.getFullYear();
+    const monthsDiff = now.getMonth() - date.getMonth();
+    const totalMonths = yearsDiff * 12 + monthsDiff;
+
+    if (totalMonths === 1) {
         return "1 month old";
     }
 
-    if (diffMonths < 12) {
-        return `${diffMonths} months old`;
+    if (totalMonths < 12) {
+        return `${totalMonths} months old`;
     }
 
-    const diffYears = Math.floor(diffMonths / 12);
-    if (diffYears === 1) {
+    const years = Math.floor(totalMonths / 12);
+    if (years === 1) {
         return "1 year old";
     }
 
-    return `${diffYears} years old`;
+    return `${years} years old`;
 }
