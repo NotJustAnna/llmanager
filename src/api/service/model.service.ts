@@ -55,6 +55,7 @@ export default class ModelService {
             pricing,
             imageUrl: dbModel.imageUrl,
             allowed,
+            createdAt: dbModel.createdAt,
         };
     }
 

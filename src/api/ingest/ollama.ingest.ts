@@ -78,6 +78,7 @@ export default class OllamaIngest {
             imageUrl: await this.iconService.getIconForModel(model.name, "ollama"),
             promptPrice: "Local",
             completionPrice: "Local",
+            createdAt: model.modified_at, // This is already parsed as Date by the schema
         };
 
         this.database.setModel(dbModel);

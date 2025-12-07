@@ -8,6 +8,7 @@ export const Model = z.object({
     promptPrice: z.string(),
     completionPrice: z.string(),
     imageUrl: z.httpUrl(),
+    createdAt: z.coerce.date().optional(), // Creation/modification date from provider
 });
 export const ModelDDL = createTableDDL("models", Model, { primaryKey: "id" });
 export type Model = z.infer<typeof Model>;

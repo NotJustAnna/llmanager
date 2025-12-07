@@ -7,7 +7,8 @@ import {Button} from "./ui/button";
 import {Tooltip, TooltipTrigger, TooltipContent} from "./ui/tooltip";
 import type {Model} from "@/shared/schema/model.controller";
 import {formatTokensPerCent} from "@/shared/lib/pricing";
-import {AlertCircle, Check, X, Pencil, Sparkles} from "lucide-react";
+import {formatModelAge} from "@/shared/lib/date-utils";
+import {AlertCircle, Pencil, Sparkles} from "lucide-react";
 import EditModelSheet from "./EditModelSheet";
 
 interface ModelCardProps {
@@ -33,6 +34,7 @@ export const ModelCard = memo(function ModelCard({
     const isFree = model.pricing.type === "free";
     const dotIndex = model.id.indexOf(".");
     const modelId = dotIndex !== -1 ? model.id.substring(dotIndex + 1) : model.id;
+    const modelAge = formatModelAge(model.createdAt);
 
     // Determine the visual state: if pending, show the opposite of current state
     const visuallyAllowed = isPending ? !model.allowed : model.allowed;
@@ -67,6 +69,11 @@ export const ModelCard = memo(function ModelCard({
                             >
                                 {modelId}
                             </a>
+                            {modelAge && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {modelAge}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
