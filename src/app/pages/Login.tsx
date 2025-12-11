@@ -5,6 +5,9 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card } from "../components/ui/card";
 import { toast } from "sonner";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "../components/ui/empty";
+import { LockKeyhole } from "lucide-react";
+import icon from "../favicon.svg";
 
 export default function Login() {
     const [password, setPassword] = useState("");
@@ -27,34 +30,49 @@ export default function Login() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-950 dark:to-gray-900">
-            <Card className="w-full max-w-md p-8">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-purple-700 bg-clip-text text-transparent">
-                        LLManager
-                    </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">for Open WebUI</p>
+        <div className="flex items-center justify-center min-h-screen bg-muted/30">
+            <Card className="w-full max-w-md overflow-hidden shadow-lg pt-0">
+                <div className="bg-gradient-to-r from-purple-400 to-purple-700 text-white p-8">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                        <img src={icon} alt="LLManager Logo" className="h-12 w-12" />
+                        <div>
+                            <h1 className="text-3xl font-bold">LLManager</h1>
+                            <p className="text-sm text-purple-100">for Open WebUI</p>
+                        </div>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <Input
-                            type="password"
-                            placeholder="Enter password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
-                            className="w-full"
-                        />
-                    </div>
-                    <Button
-                        type="submit"
-                        disabled={isLoading || !password}
-                        className="w-full bg-gradient-to-r from-purple-400 to-purple-700 hover:from-purple-500 hover:to-purple-800"
-                    >
-                        {isLoading ? "Logging in..." : "Login"}
-                    </Button>
-                </form>
+                <Empty className="border-0 p-8">
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <LockKeyhole className="h-6 w-6" />
+                        </EmptyMedia>
+                        <EmptyTitle>Welcome Back</EmptyTitle>
+                        <EmptyDescription>
+                            Enter your password to access the dashboard
+                        </EmptyDescription>
+                    </EmptyHeader>
+
+                    <EmptyContent>
+                        <form onSubmit={handleSubmit} className="w-full space-y-4">
+                            <Input
+                                type="password"
+                                placeholder="Enter password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
+                                className="w-full"
+                            />
+                            <Button
+                                type="submit"
+                                disabled={isLoading || !password}
+                                className="w-full bg-gradient-to-r from-purple-400 to-purple-700 hover:from-purple-500 hover:to-purple-800"
+                            >
+                                {isLoading ? "Logging in..." : "Login"}
+                            </Button>
+                        </form>
+                    </EmptyContent>
+                </Empty>
             </Card>
         </div>
     );
