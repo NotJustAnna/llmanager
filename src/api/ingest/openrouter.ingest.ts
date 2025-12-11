@@ -70,6 +70,7 @@ export default class OpenrouterIngest {
             imageUrl: await this.iconService.getIconForModel(model.id, "openrouter"),
             promptPrice: model.pricing.prompt.toString(),
             completionPrice: model.pricing.completion.toString(),
+            createdAt: new Date(model.created * 1000), // Convert UNIX timestamp to Date
         };
 
         this.database.setModel(dbModel);

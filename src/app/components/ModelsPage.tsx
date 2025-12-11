@@ -43,7 +43,7 @@ export function ModelsPage({ source }: ModelsPageProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "allowed" | "blocked">("all");
     const [filterFree, setFilterFree] = useState<"all" | "free" | "paid">("all");
-    const [sortBy, setSortBy] = useState<"name" | "provider" | "input-cost" | "output-cost" | "combined-cost">("name");
+    const [sortBy, setSortBy] = useState<"name" | "provider" | "input-cost" | "output-cost" | "combined-cost" | "newest" | "oldest">("name");
     const [isSaving, setIsSaving] = useState(false);
 
     const currentAllowed = useMemo(() => new Set(models.filter((m) => m.allowed).map((m) => m.id)), [models]);
@@ -97,6 +97,20 @@ export function ModelsPage({ source }: ModelsPageProps) {
                     const costA = a.pricing.type === "free" ? 0 : a.pricing.prompt + a.pricing.completion;
                     const costB = b.pricing.type === "free" ? 0 : b.pricing.prompt + b.pricing.completion;
                     return costA - costB;
+                }
+                case "newest": {
+                    // Sort by newest first (descending)
+                    // Models without dates are treated as epoch (Jan 1, 1970) and appear at the end
+                    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return dateB - dateA;
+                }
+                case "oldest": {
+                    // Sort by oldest first (ascending)
+                    // Models without dates are treated as far future and appear at the end
+                    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
+                    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : Number.MAX_SAFE_INTEGER;
+                    return dateA - dateB;
                 }
                 default:
                     return 0;
@@ -263,7 +277,9 @@ export function ModelsPage({ source }: ModelsPageProps) {
                                                     | "provider"
                                                     | "input-cost"
                                                     | "output-cost"
-                                                    | "combined-cost",
+                                                    | "combined-cost"
+                                                    | "newest"
+                                                    | "oldest",
                                             )
                                         }
                                     >
@@ -276,6 +292,8 @@ export function ModelsPage({ source }: ModelsPageProps) {
                                         <DropdownMenuRadioItem value="combined-cost">
                                             Combined Cost
                                         </DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="newest">Newest</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="oldest">Oldest</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>

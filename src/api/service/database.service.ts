@@ -22,8 +22,8 @@ export default class DatabaseService {
 
     setModel(model: Model): void {
         this.sqlite().run(
-            `INSERT OR REPLACE INTO models ("id", "name", "description", "imageUrl", "promptPrice", "completionPrice") 
-             VALUES ($id, $name, $description, $imageUrl, $promptPrice, $completionPrice)`,
+            `INSERT OR REPLACE INTO models ("id", "name", "description", "imageUrl", "promptPrice", "completionPrice", "createdAt") 
+             VALUES ($id, $name, $description, $imageUrl, $promptPrice, $completionPrice, $createdAt)`,
             {
                 // @ts-expect-error
                 $id: model.id,
@@ -32,6 +32,7 @@ export default class DatabaseService {
                 $imageUrl: model.imageUrl,
                 $promptPrice: model.promptPrice,
                 $completionPrice: model.completionPrice,
+                $createdAt: model.createdAt?.toISOString(),
             },
         );
     }

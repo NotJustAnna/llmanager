@@ -13,6 +13,7 @@ export const Model = z.object({
     pricing: Pricing,
     imageUrl: z.httpUrl(),
     allowed: z.boolean(),
+    createdAt: z.coerce.date().optional(), // Creation/modification date from provider
 });
 export type Model = z.infer<typeof Model>;
 
